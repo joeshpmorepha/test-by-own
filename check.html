@@ -51,7 +51,7 @@ const json = await data.json();
 const match = json.matches.find(m => String(m.match_id) === matchId);
 if(!match) return null;
 const master = match.auto_streams[0].auto;
-const regex = new RegExp(https.*${quality}p\\.m3u8[^\\n]*);
+const regex = new RegExp(`https.*${quality}p\\.m3u8[^\\n]*`);
 const found = master.match(regex);
 return found ? found[0] : null;
 }
