@@ -3,39 +3,42 @@
 
 <head>
 
-<title>Famcode - Matches</title>
-
 <meta charset="UTF-8">
 
-<meta name="viewport"
-content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<title>Player</title>
 
-<meta name="referrer" content="no-referrer"/>
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1">
 
-<link rel="stylesheet"
-href="https://cdn.jsdelivr.net/npm/plyr@3.6.12/dist/plyr.css"/>
+<meta
+name="referrer"
+content="no-referrer"/>
+
+<script src="//content.jwplatform.com/libraries/SAHhwvZq.js"></script>
+
+<script src="proxyurl.js"></script>
 
 <style>
 
-html,
-body{
+html,body{
 margin:0;
-padding:0;
 height:100%;
 background:#000;
 overflow:hidden;
 font-family:Arial,sans-serif;
 }
 
-video{
+#player{
 width:100%;
 height:100%;
-max-width:100%;
 display:none;
 }
 
-.plyr{
+video{
+width:100%;
 height:100%;
+background:#000;
 }
 
 .loading{
@@ -44,7 +47,7 @@ top:50%;
 left:50%;
 transform:translate(-50%,-50%);
 text-align:center;
-color:#fff;
+color:white;
 z-index:9999;
 }
 
@@ -71,39 +74,6 @@ color:#aaa;
 margin-top:8px;
 }
 
-.popup{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,.9);
-display:flex;
-justify-content:center;
-align-items:center;
-z-index:99999;
-}
-
-.popupbox{
-width:90%;
-max-width:340px;
-background:#171717;
-padding:25px;
-border-radius:18px;
-text-align:center;
-}
-
-.btn{
-display:block;
-padding:13px;
-background:red;
-border-radius:10px;
-color:white;
-text-decoration:none;
-font-weight:bold;
-margin-top:20px;
-}
-
 </style>
 
 </head>
@@ -127,25 +97,23 @@ Preparing player
 </div>
 
 
+<div id="player">
+
 <video
-id="player"
-autoplay
-muted
+id="video"
 controls
-crossorigin
+autoplay
 playsinline>
 </video>
 
+</div>
 
-<script src="proxyurl.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1.1.4/dist/hls.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/plyr@3.6.12/dist/plyr.min.js"></script>
 
 <script>
 
 const params=
 new URLSearchParams(
-window.location.search
+location.search
 );
 
 const id=
@@ -153,16 +121,11 @@ params.get("id");
 
 const video=
 document.getElementById(
-"player"
-);
-
-const loading=
-document.getElementById(
-"loading"
+"video"
 );
 
 
-// EXACT OLD DETECTION
+// OLD WORKING DETECTION
 
 setTimeout(()=>{
 
@@ -170,13 +133,17 @@ fetch(
 "https://ipapi.co/json/?t="+Date.now()
 )
 
-.then(r=>r.json())
+.then(
+r=>r.json()
+)
 
-.then(async geo=>{
+.then(
+async geo=>{
 
 const country=
 (
-geo.country_code||""
+geo.country_code||
+""
 )
 .toUpperCase();
 
@@ -192,9 +159,26 @@ if(country==="IN"){
 
 document.body.innerHTML=`
 
-<div class="popup">
+<div style="
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.9);
+display:flex;
+justify-content:center;
+align-items:center;
+">
 
-<div class="popupbox">
+<div style="
+background:#171717;
+padding:25px;
+width:90%;
+max-width:340px;
+border-radius:20px;
+text-align:center;
+">
 
 <h2>
 
@@ -202,7 +186,9 @@ Your location is India
 
 </h2>
 
-<p class="small">
+<p style="
+color:#aaa
+">
 
 Use Indian Users Button
 
@@ -210,7 +196,17 @@ Use Indian Users Button
 
 <a
 href="javascript:history.back()"
-class="btn">
+
+style="
+display:block;
+margin-top:20px;
+background:red;
+padding:14px;
+border-radius:12px;
+color:white;
+text-decoration:none;
+font-weight:bold;
+">
 
 Watch Now - Indian Users
 
@@ -227,10 +223,11 @@ return;
 }
 
 
-// WORLD PLAYER
+// WORLD
 
 const matchId=
 id.split("_")[0];
+
 
 const res=
 await fetch(
@@ -240,27 +237,43 @@ await fetch(
 const json=
 await res.json();
 
+
 const match=
 json.matches.find(
 m=>
-String(m.match_id)===matchId
+
+String(
+m.match_id
+)
+
+===matchId
 );
+
 
 if(!match){
 
-loading.innerHTML=
+document.getElementById(
+"loading"
+).innerHTML=
 "Match not found";
 
 return;
 
 }
 
+
 const auto=
-match?.auto_streams?.[0]?.auto;
+
+match
+?.auto_streams?.[0]
+?.auto;
+
 
 if(!auto){
 
-loading.innerHTML=
+document.getElementById(
+"loading"
+).innerHTML=
 "No stream";
 
 return;
@@ -269,29 +282,38 @@ return;
 
 
 const found=
+
 auto.match(
 /https.*(240|360|480|540|720|1080)p\.m3u8[^\n]*/i
 );
 
+
 if(!found){
 
-loading.innerHTML=
+document.getElementById(
+"loading"
+).innerHTML=
 "Stream unavailable";
 
 return;
 
 }
 
-let source=
-found[0].trim();
 
-source=
+let stream=
+found[0];
 
-source
+
+// PROXY + INDEX
+
+stream=
+
+stream
 
 .replace(
-/https:\/\/[^/]+\/mumbai/i,
-`${PROXY_URL}/mumbai`
+/https:\/\/.*?\/mumbai\//,
+PROXY_URL+
+"/mumbai/"
 )
 
 .replace(
@@ -300,124 +322,99 @@ source
 );
 
 
-loading.style.display=
+document
+.getElementById(
+"loading"
+)
+.style.display=
 "none";
 
-video.style.display=
+
+document
+.getElementById(
+"player"
+)
+.style.display=
 "block";
 
 
-// PLAYER
+// APPLE
 
-if(Hls.isSupported()){
+const isApple=
 
-const hls=
-new Hls({
-maxMaxBufferLength:100
-});
-
-hls.loadSource(
-source
-);
-
-hls.attachMedia(
-video
-);
-
-hls.on(
-Hls.Events.MANIFEST_PARSED,
-()=>{
-
-const availableQualities=
-hls.levels.map(
-l=>l.height
-);
-
-new Plyr(
-video,
-{
-
-controls:[
-'play-large',
-'play',
-'mute',
-'volume',
-'settings',
-'fullscreen'
-],
-
-quality:{
-
-default:
-availableQualities[0],
-
-options:
-availableQualities,
-
-forced:true,
-
-onChange:
-quality=>{
-
-hls.levels.forEach(
-(level,index)=>{
-
-if(level.height===quality){
-
-hls.currentLevel=index;
-
-}
-
-});
-
-}
-
-}
-
-}
-
-);
-
-}
-
-);
-
-}
-
-else if(
-
-video.canPlayType(
-'application/vnd.apple.mpegurl'
+/iPad|iPhone|iPod|Macintosh/i
+.test(
+navigator.userAgent
 )
 
-){
+&&
+
+video.canPlayType(
+"application/vnd.apple.mpegurl"
+);
+
+
+// APPLE NATIVE
+
+if(isApple){
 
 video.src=
-source;
+stream;
 
-new Plyr(video);
+video.play()
+.catch(()=>{});
 
 }
+
+
+// OTHERS = JW
+
+else{
+
+jwplayer(
+"player"
+)
+
+.setup({
+
+file:stream,
+
+type:"hls",
+
+width:"100%",
+
+height:"100%",
+
+autostart:true,
+
+mute:false,
+
+stretching:"uniform",
+
+primary:"html5"
+
+});
+
+}
+
 
 })
 
+.catch(()=>{
 
-// fallback if api fails
+document
+.getElementById(
+"loading"
+)
+.innerHTML=
 
-.catch(error=>{
-
-console.log(
-error
-);
-
-// assume non-india if api fails
-
-location.reload();
+"Unable to detect location";
 
 });
 
 },2000);
 
 </script>
+
 </body>
 </html>
