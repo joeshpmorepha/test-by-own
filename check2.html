@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<title>Worldwide Player</title>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+
+<meta name="referrer" content="no-referrer"/>
+
+<link rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/plyr@3.6.12/dist/plyr.css"/>
+
+<style>
+
+html,
+body{
+margin:0;
+padding:0;
+height:100%;
+background:#000;
+overflow:hidden;
+}
+
+video{
+width:100%;
+height:100%;
+max-width:100%;
+}
+
+.plyr{
+height:100%;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<video
+id="player"
+autoplay
+muted
+controls
+crossorigin
+playsinline>
+</video>
+
+<script src="proxyurl.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.1.4/dist/hls.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/plyr@3.6.12/dist/plyr.min.js"></script>
+
+<script>
+
+// ====================================
+// PARAMS
+// ====================================
+
+const params =
+new URLSearchParams(window.location.search);
+
+const id =
+params.get("id");
+
+// ====================================
+// APPLY PROXY
+// ====================================
+
+function applyProxy(url){
+
+return url.replace(
+/https:\/\/[^/]+\/mumbai/i,
+`${PROXY_CONFIG.proxy}/mumbai`
+);
+
+}
+
+// ====================================
+// DRM FIX
+// ====================================
+
+function convertToIndex(url){
+
+return url.replace(
+/\/(240|360|480|540|720|1080)p\.m3u8/i,
+"/index.m3u8"
+);
+
+}
+
+// ====================================
+// GET STREAM
+// ====================================
+
+async function getStream(){
+
+const matchId =
+id.split("_")[0];
+
+const res =
+await fetch(
+"https://famcode.lchd-football.workers.dev/"
+);
+
+const json =
+await res.json();
+
+const match =
+json.matches.find(
+m => String(m.match_id) === matchId
+);
+
+if(!match) return null;
+
+// ====================================
+// GET AUTO STREAM
+// ====================================
+
+const auto =
+match?.auto_streams?.[0]?.auto;
+
+if(!auto) return null;
+
+// ====================================
+// FIND ANY QUALITY
+// ====================================
+
+const found =
+auto.match(
+/https.*(240|360|480|540|720|1080)p\.m3u8[^\n]*/i
+);
+
+if(!found) return null;
+
+let stream =
+found[0].trim();
+
+// ====================================
+// CHANGE TO INDEX
+// ====================================
+
+stream =
+convertToIndex(stream);
+
+// ====================================
+// APPLY PROXY
+// ====================================
+
+stream =
+applyProxy(stream);
+
+return stream;
+
+}
+
+// ====================================
+// PLAYER
+// ====================================
+
+document.addEventListener(
+"DOMContentLoaded",
+async()=>{
+
+const video =
+document.getElementById("player");
+
+const source =
+await getStream();
+
+if(!source){
+
+document.body.innerHTML =
+"<h2 style='color:white;text-align:center'>Stream Not Found</h2>";
+
+return;
+
+}
+
+// ====================================
+// HLS
+// ====================================
+
+if(Hls.isSupported()){
+
+const hls =
+new Hls({
+maxMaxBufferLength:100
+});
+
+hls.loadSource(source);
+
+hls.attachMedia(video);
+
+hls.on(
+Hls.Events.MANIFEST_PARSED,
+()=>{
+
+const availableQualities =
+hls.levels.map(
+level => level.height
+);
+
+const defaultQuality =
+availableQualities[0];
+
+new Plyr(video,{
+
+controls:[
+"play-large",
+"play",
+"mute",
+"volume",
+"settings",
+"fullscreen"
+],
+
+quality:{
+default:defaultQuality,
+options:availableQualities,
+forced:true,
+
+onChange:(quality)=>{
+
+hls.levels.forEach(
+(level,index)=>{
+
+if(
+level.height === quality
+){
+
+hls.currentLevel =
+index;
+
+}
+
+});
+
+}
+
+}
+
+});
+
+// ====================================
+// LANDSCAPE LOCK
+// ====================================
+
+document.addEventListener(
+"fullscreenchange",
+()=>{
+
+if(document.fullscreenElement){
+
+if(
+screen.orientation &&
+screen.orientation.lock
+){
+
+screen.orientation
+.lock("landscape")
+.catch(()=>{});
+
+}
+
+}
+
+else{
+
+if(
+screen.orientation &&
+screen.orientation.unlock
+){
+
+screen.orientation.unlock();
+
+}
+
+}
+
+});
+
+});
+
+}
+
+// ====================================
+// SAFARI
+// ====================================
+
+else if(
+video.canPlayType(
+"application/vnd.apple.mpegurl"
+)
+){
+
+video.src = source;
+
+new Plyr(video);
+
+}
+
+else{
+
+document.body.innerHTML =
+"<h2 style='color:white;text-align:center'>HLS Not Supported</h2>";
+
+}
+
+}
+);
+
+</script>
+
+</body>
+</html>
