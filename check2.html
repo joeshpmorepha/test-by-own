@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8">
-<title>Worldwide Player</title>
+<title>Player</title>
 
 <meta
 name="viewport"
@@ -84,6 +85,7 @@ margin-top:8px;
 
 <body>
 
+
 <div
 id="loading"
 class="loading">
@@ -116,23 +118,27 @@ playsinline>
 
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.1.4/dist/hls.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/plyr@3.6.12/dist/plyr.min.js"></script>
-
 
 <script>
 
 const params=
-new URLSearchParams(location.search);
+new URLSearchParams(
+location.search
+);
 
 const id=
 params.get("id");
 
 const video=
-document.getElementById("player");
+document.getElementById(
+"player"
+);
 
 const loading=
-document.getElementById("loading");
+document.getElementById(
+"loading"
+);
 
 
 // COUNTRY
@@ -143,7 +149,7 @@ try{
 
 const r=
 await fetch(
-"https://cxf.pages.dev/?t="+Date.now(),
+"https://ip.lchd-football.workers.dev?t="+Date.now(),
 {
 cache:"no-store"
 }
@@ -153,12 +159,13 @@ const data=
 await r.json();
 
 console.log(
-"RAW:",
-data
+"Country:",
+data.country
 );
 
 return(
-data.country||""
+data.country||
+"UNKNOWN"
 )
 .trim()
 .toUpperCase();
@@ -264,12 +271,6 @@ PROXY_URL+"/mumbai"
 );
 
 
-console.log(
-"STREAM:",
-stream
-);
-
-
 loading.style.display=
 "none";
 
@@ -281,6 +282,8 @@ document
 "block";
 
 
+
+// APPLE
 
 const isAppleSafari=
 
@@ -301,8 +304,6 @@ navigator.userAgent
 );
 
 
-// APPLE
-
 if(
 isAppleSafari &&
 video.canPlayType(
@@ -319,6 +320,7 @@ return;
 }
 
 
+
 // HLS
 
 if(Hls.isSupported()){
@@ -328,9 +330,14 @@ new Hls({
 maxMaxBufferLength:100
 });
 
-hls.loadSource(stream);
+hls.loadSource(
+stream
+);
 
-hls.attachMedia(video);
+hls.attachMedia(
+video
+);
+
 
 hls.on(
 Hls.Events.MANIFEST_PARSED,
@@ -391,6 +398,7 @@ quality===0
 ){
 
 hls.currentLevel=-1;
+
 return;
 
 }
@@ -438,15 +446,12 @@ async()=>{
 const country=
 await detectCountry();
 
-console.log(
-"COUNTRY:",
-country
-);
 
+// INDIA
 
-// ONLY INDIA BLOCKED
-
-if(country==="IN"){
+if(
+country==="IN"
+){
 
 document.body.innerHTML=`
 
@@ -476,9 +481,7 @@ Your location is India
 </h2>
 
 <p style="color:#aaa">
-
 Use Indian Users Button
-
 </p>
 
 <a
@@ -502,15 +505,12 @@ Watch Now - Indian Users
 </div>
 
 </div>
-
 `;
 
 return;
 
 }
 
-
-// everything else = player
 
 startWorldPlayer();
 
