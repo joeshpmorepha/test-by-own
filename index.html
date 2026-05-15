@@ -10,7 +10,6 @@
 <meta name="referrer" content="no-referrer">
 
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 
 <style>
@@ -63,30 +62,35 @@ transform:scale(1.03);
 Fancode Live
 </h1>
 
-<div id="matches-container"
-class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+<div
+id="matches-container"
+class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+</div>
 
 </div>
 
 <script>
 
 const container =
-document.getElementById("matches-container");
+document.getElementById(
+"matches-container"
+);
 
 const DATA_URL =
 "https://famcode.lchd-football.workers.dev/";
 
 const OLD_PLAYER =
-"https://joeshpmorepha.github.io/test-by-own/check";
+"https://yourdomain.com/check";
 
 const WORLD_PLAYER =
-"https://joeshpmorepha.github.io/test-by-own/check2";
+"https://yourdomain.com/world.html";
 
-let USER_COUNTRY = "IN";
+let USER_COUNTRY="IN";
 
-// ====================================
+
+// ==============================
 // COUNTRY
-// ====================================
+// ==============================
 
 async function getCountry(){
 
@@ -103,49 +107,63 @@ await r.json();
 USER_COUNTRY =
 j.country_code || "IN";
 
+console.log(
+"Country:",
+USER_COUNTRY
+);
+
 }
 
 catch{
 
-USER_COUNTRY = "IN";
+USER_COUNTRY="IN";
 
 }
 
 }
 
-// ====================================
+
+// ==============================
 // BUTTON
-// ====================================
+// ==============================
 
-function makeBtn(label,href){
+function makeBtn(
+label,
+href
+){
 
 const a =
-document.createElement("a");
+document.createElement(
+"a"
+);
 
-a.href = href;
+a.href=href;
 
-a.target = "_blank";
+a.target="_blank";
 
-a.className =
-"px-4 py-2 rounded-lg text-sm flex items-center justify-center shadow-md transition-all bg-red-600 hover:bg-red-700 text-white";
+a.className=
+"w-full px-4 py-4 rounded-xl text-lg flex items-center justify-center shadow-md bg-red-600 hover:bg-red-700 text-white";
 
-a.innerHTML =
-`<i class="fas fa-play mr-2"></i>${label}`;
+a.innerHTML=
+`<i class="fas fa-play mr-3"></i>${label}`;
 
 return a;
 
 }
 
-// ====================================
-// LOAD
-// ====================================
+
+// ==============================
+// LOAD MATCHES
+// ==============================
 
 async function loadMatches(){
 
-await getCountry();
+container.innerHTML="";
 
 const response =
-await fetch(DATA_URL);
+await fetch(
+DATA_URL
+);
 
 const data =
 await response.json();
@@ -153,184 +171,271 @@ await response.json();
 const matches =
 data.matches || [];
 
-// ====================================
-// LOOP
-// ====================================
-
-matches.forEach(match=>{
+matches.forEach(
+match=>{
 
 const isLive =
-(match.status || "").toUpperCase() === "LIVE" ||
-(match.streamingStatus || "").toUpperCase() === "STARTED";
+
+(match.status||"")
+.toUpperCase()
+==="LIVE"
+
+||
+
+(match.streamingStatus||"")
+.toUpperCase()
+==="STARTED";
+
 
 const card =
-document.createElement("div");
+document.createElement(
+"div"
+);
 
-card.className =
-`rounded-2xl overflow-hidden shadow-xl match-card border border-gray-800 ${isLive?"ring-2 ring-red-600":""}`;
+card.className=
+"rounded-2xl overflow-hidden shadow-xl match-card border border-gray-800";
 
-const img =
+
+const img=
+
 match.image ||
+
 "https://www.fancode.com/skillup-uploads/cms-media/Cricket_Fallback_Old_match-card.jpg";
 
-const btnWrap =
-document.createElement("div");
 
-btnWrap.className =
-"flex flex-wrap gap-3 hidden mt-4";
+const btnWrap=
+document.createElement(
+"div"
+);
 
-// ====================================
-// STREAM BUTTONS
-// ====================================
+
+// vertical layout
+
+btnWrap.className=
+"flex flex-col gap-4 hidden mt-4";
+
+
+// ==============================
+// BUTTONS
+// ==============================
 
 if(
+
 isLive &&
+
 match.auto_streams &&
+
 match.auto_streams.length
+
 ){
 
-const lang =
-(match.language || "ENGLISH")
+const lang=
+
+(match.language||"ENGLISH")
 .toUpperCase();
 
-// ====================================
+
 // INDIA
-// ====================================
 
-if(USER_COUNTRY === "IN"){
+if(
+USER_COUNTRY==="IN"
+){
 
-const master =
+const master=
 match.auto_streams[0].auto;
 
-const qualities =
-[...master.matchAll(/(\d+)p\.m3u8/g)];
+const qualities=
+[
+...master.matchAll(
+/(\d+)p\.m3u8/g
+)
+];
 
-qualities.forEach(q=>{
+qualities.forEach(
+q=>{
 
-const quality = q[1];
+const quality=
+q[1];
 
-const href =
+const href=
 `${OLD_PLAYER}?id=${match.match_id}_${lang}&q=${quality}`;
 
 btnWrap.appendChild(
-makeBtn(`${quality}p`,href)
+
+makeBtn(
+`${quality}p`,
+href
+)
+
 );
 
 });
 
 }
 
-// ====================================
-// WORLDWIDE
-// ====================================
+
+// WORLD
 
 else{
 
-const href =
+const href=
 `${WORLD_PLAYER}?id=${match.match_id}_${lang}`;
 
 btnWrap.appendChild(
-makeBtn("Watch Now",href)
+
+makeBtn(
+"Watch Now",
+href
+)
+
 );
 
 }
 
 }
 
-// ====================================
+
+// ==============================
 // BODY
-// ====================================
+// ==============================
 
-const body =
-document.createElement("div");
+const body=
+document.createElement(
+"div"
+);
 
-body.className =
+body.className=
 "p-5";
 
-body.innerHTML = `
+body.innerHTML=`
+
 <div class="relative">
 
-<img src="${img}"
+<img
+src="${img}"
 class="w-full h-60 object-cover rounded-xl match-img">
 
-${isLive
-? `<span class="absolute top-3 left-3 bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-full live-badge">LIVE</span>`
-: ""}
+${
+isLive ?
+
+`<span class="absolute top-3 left-3 bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-full live-badge">
+
+LIVE
+
+</span>`
+
+:
+
+""
+
+}
 
 </div>
 
 <h2 class="text-xl font-semibold mt-4">
+
 ${match.title || "Match"}
+
 </h2>
 
 <p class="text-gray-400 text-sm mt-1">
+
 ${match.tournament || ""}
+
 </p>
 
 <p class="text-gray-500 text-sm mt-2">
+
 ${match.startTime || ""}
+
 </p>
 
 <p class="text-gray-500 text-sm mt-2">
+
 ${match.language || ""}
+
 </p>
+
 `;
 
-// ====================================
-// LIVE BUTTON
-// ====================================
 
 if(isLive){
 
-const toggleBtn =
-document.createElement("button");
+const toggleBtn=
+document.createElement(
+"button"
+);
 
-toggleBtn.className =
+toggleBtn.className=
 "w-full bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold py-2 px-4 rounded-lg mt-4";
 
-toggleBtn.innerHTML =
-`<i class="fas fa-tv mr-2"></i>Watch Now`;
+toggleBtn.innerHTML=
+`<i class="fas fa-tv mr-2"></i> Watch Now`;
 
-toggleBtn.onclick = ()=>{
-btnWrap.classList.toggle("hidden");
+toggleBtn.onclick=()=>{
+
+btnWrap.classList.toggle(
+"hidden"
+);
+
 };
 
-body.appendChild(toggleBtn);
+body.appendChild(
+toggleBtn
+);
 
-body.appendChild(btnWrap);
+body.appendChild(
+btnWrap
+);
 
 }
-
-// ====================================
-// NO STREAM
-// ====================================
 
 else{
 
-const noStream =
-document.createElement("div");
+const noStream=
+document.createElement(
+"div"
+);
 
-noStream.className =
+noStream.className=
 "w-full bg-gray-800 text-gray-400 py-2 px-4 rounded-lg mt-4 text-center";
 
-noStream.innerHTML =
+noStream.innerHTML=
 `<i class="fas fa-clock mr-2"></i>No stream available yet`;
 
-body.appendChild(noStream);
+body.appendChild(
+noStream
+);
 
 }
 
-card.appendChild(body);
+card.appendChild(
+body
+);
 
-container.appendChild(card);
+container.appendChild(
+card
+);
 
 });
 
 }
 
-loadMatches();
+
+// ==============================
+// START
+// ==============================
+
+(async()=>{
+
+await getCountry();
+
+await loadMatches();
+
+})();
 
 </script>
 
 </body>
+
 </html>
