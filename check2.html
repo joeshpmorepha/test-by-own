@@ -5,14 +5,20 @@
 <meta
 name="viewport"
 content="width=device-width,initial-scale=1">
-<title>Famcode - Matches</title>
+
+<title>WorldWide Player</title>
+
 <meta
 name="referrer"
 content="no-referrer"/>
+
 <link rel="stylesheet"
 href="https://cdn.jsdelivr.net/npm/plyr@3.6.12/dist/plyr.css"/>
+
 <script src="proxyurl.js"></script>
+
 <style>
+
 html,body{
 margin:0;
 height:100%;
@@ -31,8 +37,7 @@ display:none;
 position:fixed;
 top:50%;
 left:50%;
-transform:
-translate(-50%,-50%);
+transform:translate(-50%,-50%);
 text-align:center;
 color:white;
 z-index:9999;
@@ -41,24 +46,20 @@ z-index:9999;
 .loader{
 width:45px;
 height:45px;
-border:
-4px solid #333;
-border-top:
-4px solid red;
+border:4px solid #333;
+border-top:4px solid red;
 border-radius:50%;
 margin:auto;
 margin-bottom:15px;
-animation:
-spin .9s linear infinite;
+animation:spin .9s linear infinite;
 }
 
 @keyframes spin{
 100%{
-transform:
-rotate(360deg);
+transform:rotate(360deg);
 }
 }
-  
+
 .small{
 font-size:14px;
 color:#aaa;
@@ -70,8 +71,7 @@ top:0;
 left:0;
 width:100%;
 height:100%;
-background:
-rgba(0,0,0,.9);
+background:rgba(0,0,0,.9);
 display:flex;
 justify-content:center;
 align-items:center;
@@ -97,20 +97,30 @@ text-decoration:none;
 font-weight:bold;
 margin-top:20px;
 }
+
 </style>
+
 </head>
+
 <body>
+
 <div
 id="loading"
 class="loading">
+
 <div class="loader"></div>
+
 <div>
 Checking location...
 </div>
+
 <div class="small">
 Preparing player
 </div>
+
 </div>
+
+
 <video
 id="player"
 autoplay
@@ -118,150 +128,248 @@ controls
 playsinline
 crossorigin>
 </video>
+
+
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.1.4/dist/hls.min.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/plyr@3.6.12/dist/plyr.min.js"></script>
+
+
 <script>
+
 const params=
 new URLSearchParams(
 location.search
 );
+
 const id=
 params.get("id");
+
 const video=
 document.getElementById(
 "player"
 );
+
 const loading=
 document.getElementById(
 "loading"
 );
 
-// delay
+
+// keep your delay
 
 setTimeout(()=>{
+
 fetch(
-"https://ipapi.co/json/"
+"https://ipapi.co/json/?t="+Date.now(),
+{
+cache:"no-store"
+}
 )
-.then(
-r=>r.json()
-)
-.then(
-async geo=>{
+
+.then(response=>{
+
+if(!response.ok){
+
+throw new Error(
+`geo api ${response.status}`
+);
+
+}
+
+return response.json();
+
+})
+
+.then(async geo=>{
+
+console.log(
+"GEO:",
+geo
+);
 
 const country=
+
 (
 geo.country_code||
+
+geo.country||
+
 ""
 )
+
 .toUpperCase();
 
+
 // INDIA
+
 if(
 country==="IN"
 ){
+
 document.body.innerHTML=`
+
 <div class="popup">
+
 <div class="popupbox">
+
 <h2>
+
 Your location is India
+
 </h2>
+
 <p class="small">
+
 Use Indian Users Button
+
 </p>
+
 <a
 href="javascript:history.back()"
 class="btn">
+
 Watch Now - Indian Users
+
 </a>
+
 </div>
+
 </div>
+
 `;
+
 return;
+
 }
 
 
 // WORLD
+
 const matchId=
 id.split("_")[0];
+
+
 const res=
 await fetch(
 "https://famcode.lchd-football.workers.dev/"
 );
+
 const data=
 await res.json();
+
+
 const match=
 data.matches.find(
 m=>
+
 String(
 m.match_id
 )
+
 ===matchId
 );
 
+
 let url=
+
 match
 .auto_streams?.[0]
 ?.auto
 .match(
 /https.*1080p\.m3u8/
 )?.[0];
+
+
+if(!url){
+
+throw new Error(
+"No stream found"
+);
+
+}
+
+
 url=
+
 url
 .replace(
 /https:\/\/.*?\/mumbai\//,
-PROXY_URL+
-"/mumbai/"
+PROXY_URL+"/mumbai/"
 )
+
 .replace(
 "1080p.m3u8",
 "index.m3u8"
 );
+
+
 loading.style.display=
 "none";
+
 video.style.display=
 "block";
+
+
+
 if(
 Hls.isSupported()
 ){
+
 const hls=
 new Hls({
 maxMaxBufferLength:100
 });
+
 hls.loadSource(
 url
 );
+
 hls.attachMedia(
 video
 );
+
+
 hls.on(
 Hls.Events.MANIFEST_PARSED,
 ()=>{
+
 const qualities=
+
 hls.levels
 .map(
 l=>l.height
 );
 
+
 new Plyr(
 video,
 {
+
 controls:[
+
 'play-large',
 'play',
 'mute',
 'volume',
 'settings',
 'fullscreen'
+
 ],
 
 quality:{
+
 default:
 qualities[0],
+
 options:
 qualities,
+
 forced:true,
+
 onChange:
 quality=>{
+
 hls.levels
 .forEach(
 (level,index)=>{
@@ -269,29 +377,64 @@ hls.levels
 if(
 level.height===quality
 ){
+
 hls.currentLevel=index;
+
 }
+
 });
+
 }
+
 }
+
 }
+
 );
+
 }
+
 );
+
 }
+
 else{
+
 video.src=url;
+
 new Plyr(video);
+
 }
+
 })
-.catch(()=>{
+
+.catch(error=>{
+
+console.log(
+error
+);
+
 loading.innerHTML=`
+
 <div>
+
 Unable to detect location
+
 </div>
+
+<div class="small">
+
+Try refreshing
+
+</div>
+
 `;
+
 });
+
 },2000);
+
 </script>
+
 </body>
 </html>
