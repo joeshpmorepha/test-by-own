@@ -2,10 +2,9 @@
 <html lang="en">
 
 <head>
-
 <meta charset="UTF-8">
 
-<title>Worldwide Player</title>
+<title>FamcodePlayer</title>
 
 <meta
 name="viewport"
@@ -54,6 +53,7 @@ left:50%;
 transform:translate(-50%,-50%);
 text-align:center;
 color:white;
+z-index:9999;
 }
 
 .loader{
@@ -80,11 +80,9 @@ margin-top:8px;
 }
 
 </style>
-
 </head>
 
 <body>
-
 
 <div
 id="loading"
@@ -101,7 +99,6 @@ Preparing player
 </div>
 
 </div>
-
 
 
 <div id="playerWrap">
@@ -143,12 +140,12 @@ document.getElementById(
 );
 
 
-// OLD DETECTION
+// LOCATION
 
 setTimeout(()=>{
 
 fetch(
-"https://ipapi.co/json/?t="+Date.now()
+"https://ipwho.is/"
 )
 
 .then(
@@ -159,11 +156,18 @@ r=>r.json()
 async geo=>{
 
 const country=
+
 (
 geo.country_code||
 ""
 )
+
 .toUpperCase();
+
+console.log(
+"Country:",
+country
+);
 
 
 // INDIA
@@ -197,8 +201,11 @@ text-align:center;
 Your location is India
 </h2>
 
-<p style="color:#aaa">
+<p style="
+color:#aaa">
+
 Use Indian Users Button
+
 </p>
 
 <a
@@ -222,6 +229,7 @@ Watch Now - Indian Users
 </div>
 
 </div>
+
 `;
 
 return;
@@ -254,8 +262,19 @@ m.match_id
 );
 
 
+if(!match){
+
+loading.innerHTML=
+"Match not found";
+
+return;
+
+}
+
+
 const auto=
 match?.auto_streams?.[0]?.auto;
+
 
 if(!auto){
 
@@ -267,7 +286,7 @@ return;
 }
 
 
-// FIND STREAM
+// FIND QUALITY URL
 
 const found=
 
@@ -290,7 +309,7 @@ let stream=
 found[0].trim();
 
 
-// INDEX
+// QUALITY -> INDEX
 
 stream=
 stream.replace(
@@ -299,12 +318,17 @@ stream.replace(
 );
 
 
-// PROXY
+// CDN -> PROXY
 
 stream=
 stream.replace(
 /https:\/\/[^/]+\/mumbai/i,
 PROXY_URL+"/mumbai"
+);
+
+
+console.log(
+stream
 );
 
 
@@ -339,7 +363,9 @@ return;
 
 // HLS
 
-if(Hls.isSupported()){
+if(
+Hls.isSupported()
+){
 
 const hls=
 new Hls({
@@ -354,15 +380,14 @@ hls.attachMedia(
 video
 );
 
-
 hls.on(
 Hls.Events.MANIFEST_PARSED,
 ()=>{
 
-const availableQualities=
+const qualities=
 
 hls.levels.map(
-level=>level.height
+l=>l.height
 );
 
 new Plyr(
@@ -370,23 +395,21 @@ video,
 {
 
 controls:[
-
 'play-large',
 'play',
 'mute',
 'volume',
 'settings',
 'fullscreen'
-
 ],
 
 quality:{
 
 default:
-availableQualities[0],
+qualities[0],
 
 options:
-availableQualities,
+qualities,
 
 forced:true,
 
@@ -420,7 +443,9 @@ hls.currentLevel=index;
 
 })
 
-.catch(()=>{
+.catch(err=>{
+
+console.log(err);
 
 loading.innerHTML=
 "Unable to detect location";
