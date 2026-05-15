@@ -3,7 +3,7 @@
 
 <head>
 
-<title>Worldwide Player</title>
+<title>Famcode - Matches</title>
 
 <meta charset="UTF-8">
 
@@ -138,33 +138,21 @@ playsinline>
 
 
 <script src="proxyurl.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.1.4/dist/hls.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/plyr@3.6.12/dist/plyr.min.js"></script>
 
 <script>
 
-const params=
-new URLSearchParams(
-window.location.search
-);
+const params=new URLSearchParams(location.search);
 
-const id=
-params.get("id");
+const id=params.get("id");
 
-const video=
-document.getElementById(
-"player"
-);
+const video=document.getElementById("player");
 
-const loading=
-document.getElementById(
-"loading"
-);
+const loading=document.getElementById("loading");
 
 
-// LOCATION DETECT
+// OLD WORKING LOCATION DETECTION
 
 setTimeout(()=>{
 
@@ -175,26 +163,18 @@ cache:"no-store"
 }
 )
 
-.then(
-r=>r.json()
-)
+.then(r=>r.json())
 
-.then(
-async geo=>{
+.then(async geo=>{
 
 const country=
-(
-geo.country_code||
-""
-)
+(geo.country_code||"")
 .toUpperCase();
 
 
-// INDIA
+// INDIA POPUP
 
-if(
-country==="IN"
-){
+if(country==="IN"){
 
 document.body.innerHTML=`
 
@@ -203,15 +183,11 @@ document.body.innerHTML=`
 <div class="popupbox">
 
 <h2>
-
 Your location is India
-
 </h2>
 
 <p class="small">
-
 Use Indian Users Button
-
 </p>
 
 <a
@@ -233,67 +209,9 @@ return;
 }
 
 
-// WORLD LOAD
+// WORLD PLAYER
 
-const source=
-await getStream();
-
-if(!source){
-
-document.body.innerHTML=
-"<h2 style='color:white;text-align:center'>Stream Not Found</h2>";
-
-return;
-
-}
-
-loading.style.display="none";
-
-video.style.display="block";
-
-startPlayer(source);
-
-});
-
-},2000);
-
-
-// ====================================
-// APPLY PROXY
-// ====================================
-
-function applyProxy(url){
-
-return url.replace(
-/https:\/\/[^/]+\/mumbai/i,
-`${PROXY_URL}/mumbai`
-);
-
-}
-
-
-// ====================================
-// DRM FIX
-// ====================================
-
-function convertToIndex(url){
-
-return url.replace(
-/\/(240|360|480|540|720|1080)p\.m3u8/i,
-"/index.m3u8"
-);
-
-}
-
-
-// ====================================
-// GET STREAM
-// ====================================
-
-async function getStream(){
-
-const matchId=
-id.split("_")[0];
+const matchId=id.split("_")[0];
 
 const res=
 await fetch(
@@ -305,49 +223,77 @@ await res.json();
 
 const match=
 json.matches.find(
-m=>
-String(m.match_id)===matchId
+m=>String(m.match_id)===matchId
 );
 
-if(!match)return null;
+if(!match){
 
-const auto=
-match?.auto_streams?.[0]?.auto;
+loading.innerHTML=
+"Match not found";
 
-if(!auto)return null;
-
-
-const found=
-
-auto.match(
-/https.*(240|360|480|540|720|1080)p\.m3u8[^\n]*/i
-);
-
-if(!found)return null;
-
-let stream=
-found[0].trim();
-
-stream=
-convertToIndex(
-stream
-);
-
-stream=
-applyProxy(
-stream
-);
-
-return stream;
+return;
 
 }
 
 
-// ====================================
-// PLAYER
-// ====================================
+const auto=
+match?.auto_streams?.[0]?.auto;
 
-function startPlayer(source){
+if(!auto){
+
+loading.innerHTML=
+"No stream";
+
+return;
+
+}
+
+
+// FIND ANY QUALITY
+
+const found=
+auto.match(
+/https.*(240|360|480|540|720|1080)p\.m3u8[^\n]*/i
+);
+
+if(!found){
+
+loading.innerHTML=
+"Stream unavailable";
+
+return;
+
+}
+
+let source=
+found[0].trim();
+
+
+// PROXY + INDEX
+
+source=
+
+source
+
+.replace(
+/https:\/\/[^/]+\/mumbai/i,
+`${PROXY_URL}/mumbai`
+)
+
+.replace(
+/\/(240|360|480|540|720|1080)p\.m3u8/i,
+"/index.m3u8"
+);
+
+
+loading.style.display=
+"none";
+
+video.style.display=
+"block";
+
+
+// YOUR ORIGINAL PLAYER
 
 if(Hls.isSupported()){
 
@@ -375,20 +321,17 @@ availableQualities[0];
 new Plyr(video,{
 
 controls:[
-"play-large",
-"play",
-"mute",
-"volume",
-"settings",
-"fullscreen"
+'play-large',
+'play',
+'mute',
+'volume',
+'settings',
+'fullscreen'
 ],
 
 quality:{
-
 default:defaultQuality,
-
 options:availableQualities,
-
 forced:true,
 
 onChange:(quality)=>{
@@ -396,9 +339,7 @@ onChange:(quality)=>{
 hls.levels.forEach(
 (level,index)=>{
 
-if(
-level.height===quality
-){
+if(level.height===quality){
 
 hls.currentLevel=index;
 
@@ -411,6 +352,7 @@ hls.currentLevel=index;
 }
 
 });
+
 
 document.addEventListener(
 "fullscreenchange",
@@ -446,12 +388,12 @@ screen.orientation.unlock();
 
 });
 
-}else if(
+}
 
+else if(
 video.canPlayType(
-"application/vnd.apple.mpegurl"
+'application/vnd.apple.mpegurl'
 )
-
 ){
 
 video.src=source;
@@ -460,7 +402,23 @@ new Plyr(video);
 
 }
 
+else{
+
+document.body.innerHTML=
+"<h2 style='color:white'>HLS not supported</h2>";
+
 }
+
+})
+
+.catch(()=>{
+
+loading.innerHTML=
+"Unable to detect location";
+
+});
+
+},2000);
 
 </script>
 
