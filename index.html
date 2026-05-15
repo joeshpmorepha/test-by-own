@@ -1,14 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Fancode Live</title>
+<meta charset="UTF-8"/>
+<title>Famcode - Matches</title>
 
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="referrer" content="no-referrer">
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0"/>
 
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+<link rel="shortcut icon" href="#"/>
+
+<link
+href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+rel="stylesheet">
+
+<link
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+rel="stylesheet">
 
 <style>
 
@@ -18,34 +26,75 @@ color:#fff;
 }
 
 .match-card{
-background:linear-gradient(145deg,#1a1a1a,#222);
 transition:.3s;
+background:
+linear-gradient(
+145deg,
+#1a1a1a,
+#1f1f1f
+);
 }
 
 .match-card:hover{
-transform:translateY(-5px);
+transform:
+translateY(-6px);
+
+box-shadow:
+0 25px 35px rgba(
+0,0,0,.45
+);
 }
 
 .live-badge{
-animation:pulse 1.5s infinite;
+animation:
+pulse 1.5s infinite;
 }
 
 @keyframes pulse{
-0%{box-shadow:0 0 0 0 rgba(255,0,0,.7);}
-70%{box-shadow:0 0 0 10px rgba(255,0,0,0);}
-100%{box-shadow:0 0 0 0 rgba(255,0,0,0);}
+
+0%,100%{
+box-shadow:
+0 0 0 0 rgba(
+239,68,68,.7
+);
+}
+
+50%{
+box-shadow:
+0 0 15px 10px rgba(
+239,68,68,0
+);
+}
+
+}
+
+.match-img{
+transition:
+transform .3s;
+}
+
+.match-card:hover
+.match-img{
+
+transform:
+scale(1.03);
+
 }
 
 </style>
+
 </head>
 
-<body>
+<body class="bg-gray-950 min-h-screen">
 
-<div class="max-w-7xl mx-auto p-5">
+<div class="max-w-7xl mx-auto px-4 py-8 sm:py-10">
 
-<h1 class="text-4xl font-bold text-center mb-8">
+<h1 class="text-3xl sm:text-4xl font-bold text-center text-white mb-8 tracking-wide">
+
 Fancode Live
+
 </h1>
+
 
 <div
 id="matches-container"
@@ -53,6 +102,8 @@ class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
 </div>
 
 </div>
+
+
 
 <script>
 
@@ -62,13 +113,11 @@ document.getElementById(
 );
 
 const DATA_URL=
-"https://famcode.lchd-football.workers.dev/";
+"https://raw.githubusercontent.com/doctor-8trange/zyphx8/refs/heads/main/data/fancode.json";
 
-const OLD_PLAYER=
-"https://joeshpmorepha.github.io/test-by-own/check";
+const PLAY_BASE=
+"https://famcodexwebs.pages.dev/play2";
 
-const WORLD_PLAYER=
-"https://joeshpmorepha.github.io/test-by-own/check2";
 
 
 function makeBtn(
@@ -86,55 +135,117 @@ a.href=href;
 a.target="_blank";
 
 a.className=
-`
-px-4
-py-2
-bg-red-600
-hover:bg-red-700
-rounded-lg
-text-white
-shadow-md
-flex
-items-center
-justify-center
-text-sm
-`;
+"px-4 py-2 rounded-lg text-sm flex items-center justify-center shadow-md transition-all bg-red-600 hover:bg-red-700 text-white";
 
 a.innerHTML=
-`
-<i class="fas fa-play mr-2"></i>
-${label}
-`;
+`<i class="fas fa-play mr-2"></i>${label}`;
 
 return a;
 
 }
 
 
-async function loadMatches(){
 
-const res=
-await fetch(DATA_URL);
+fetch(DATA_URL)
 
-const data=
-await res.json();
+.then(
+r=>r.json()
+)
 
-const matches=
-data.matches||[];
+.then(data=>{
+
+
+let matches=
+
+Array.isArray(
+data.matches
+)
+
+?
+
+data.matches
+
+:
+
+[];
+
+
+
+matches.sort(
+(a,b)=>{
+
+const aLive=
+
+(a.status||"")
+.toUpperCase()
+==="LIVE"
+
+||
+
+(a.streamingStatus||"")
+.toUpperCase()
+==="STARTED";
+
+
+const bLive=
+
+(b.status||"")
+.toUpperCase()
+==="LIVE"
+
+||
+
+(b.streamingStatus||"")
+.toUpperCase()
+==="STARTED";
+
+
+return
+(bLive?1:0)
+-
+(aLive?1:0);
+
+}
+);
+
 
 
 matches.forEach(
 match=>{
 
+
 const isLive=
 
 (match.status||"")
-.toUpperCase()==="LIVE"
+.toUpperCase()
+==="LIVE"
 
 ||
 
 (match.streamingStatus||"")
-.toUpperCase()==="STARTED";
+.toUpperCase()
+==="STARTED";
+
+
+
+const imgSrc=
+
+match.image
+
+||
+
+(
+match.image_cdn&&
+(
+match.image_cdn.APP||
+match.image_cdn.BG_IMAGE
+)
+)
+
+||
+
+"https://www.fancode.com/skillup-uploads/cms-media/Cricket_Fallback_Old_match-card.jpg";
+
 
 
 const card=
@@ -142,14 +253,39 @@ document.createElement(
 "div"
 );
 
+
 card.className=
-`
-match-card
-rounded-2xl
-overflow-hidden
-shadow-xl
-border
-border-gray-800
+`rounded-2xl overflow-hidden shadow-xl match-card border border-gray-800 ${isLive?"ring-2 ring-red-600":""}`;
+
+
+
+const headerHTML=`
+
+<div class="relative">
+
+<img
+src="${imgSrc}"
+
+class="w-full h-48 sm:h-60 md:h-64 lg:h-72 object-cover object-top match-img">
+
+${
+isLive?
+
+`<span
+class="absolute top-3 left-3 bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md live-badge">
+
+LIVE
+
+</span>`
+
+:
+
+""
+
+}
+
+</div>
+
 `;
 
 
@@ -159,131 +295,146 @@ document.createElement(
 );
 
 body.className=
-"p-5";
+"p-5 sm:p-6";
 
 
 body.innerHTML=`
 
-<img
-src="${match.image}"
-class="
-w-full
-h-56
-object-cover
-rounded-xl
-">
+<h2 class="text-xl sm:text-2xl font-semibold text-white mb-1">
 
-<h2 class="text-xl font-semibold mt-4">
-${match.title}
+${match.title||"Match"}
+
 </h2>
 
-<p class="text-gray-400 text-sm">
+<p class="text-gray-400 text-sm mb-1">
+
 ${match.tournament||""}
+
 </p>
 
-<p class="text-gray-500 text-sm mt-2">
+<p class="text-sm text-gray-500 mb-2">
+
 ${match.startTime||""}
+
 </p>
 
-<p class="text-gray-500 text-sm mt-2">
-${match.language||""}
+<p class="text-sm text-gray-500 mb-3">
+
+${match.language||"ENGLISH"}
+
 </p>
 
 `;
+
 
 
 if(isLive){
 
-const qualityWrap=
+const btnWrap=
 document.createElement(
 "div"
 );
 
-qualityWrap.className=
-`
-hidden
-flex
-flex-wrap
-gap-3
-mt-4
-justify-center
-`;
-
-const indiaBtn=
-document.createElement(
-"button"
-);
-
-indiaBtn.className=
-`
-w-full
-bg-red-600
-py-2
-rounded-lg
-mt-4
-`;
-
-indiaBtn.innerText=
-"Watch Now - Indian Users";
+btnWrap.className=
+"flex flex-wrap gap-3 hidden mt-4";
 
 
-indiaBtn.onclick=()=>{
 
-qualityWrap.classList.toggle(
-"hidden"
-);
-
-};
-
-
-const worldBtn=
-makeBtn(
-"Watch Now - Worldwide Users",
-`${WORLD_PLAYER}?id=${match.match_id}_${match.language}`
-);
-
-worldBtn.style.marginTop=
-"10px";
-
-
+if(
+match.auto_streams &&
+match.auto_streams.length
+){
 
 const master=
-match.auto_streams?.[0]?.auto||"";
+match.auto_streams[0].auto;
+
 
 const qualities=
+
 [
 ...master.matchAll(
 /(\d+)p\.m3u8/g
 )
 ];
 
-
-qualities.forEach(
-q=>{
-
-const quality=q[1];
-
-qualityWrap.appendChild(
-
-makeBtn(
-
-quality+"p",
-
-`${OLD_PLAYER}?id=${match.match_id}_${match.language}&q=${quality}`
-
+const lang=
+(
+match.language||
+"ENGLISH"
 )
+.toUpperCase();
 
+
+
+qualities.forEach(q=>{
+
+const quality=
+q[1];
+
+const href=
+
+`${PLAY_BASE}?id=${match.match_id}_${lang}&q=${quality}`;
+
+btnWrap.appendChild(
+makeBtn(
+`${quality}p`,
+href
+)
 );
 
 });
 
+}
+
+
+
+const indianBtn=
+document.createElement(
+"button"
+);
+
+indianBtn.className=
+"w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold py-2 px-4 rounded-lg mt-3";
+
+indianBtn.innerHTML=
+`<i class="fas fa-tv mr-2"></i>Watch Now - Indian Users`;
+
+indianBtn.onclick=
+()=>{
+
+btnWrap.classList.toggle(
+"hidden"
+);
+
+};
+
+
+
+const worldBtn=
+document.createElement(
+"a"
+);
+
+worldBtn.href=
+`world.html?id=${match.match_id}_${(match.language||"ENGLISH").toUpperCase()}`;
+
+worldBtn.target=
+"_blank";
+
+worldBtn.className=
+"w-full mt-3 block text-center bg-gray-800 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg";
+
+worldBtn.innerHTML=
+`<i class="fas fa-globe mr-2"></i>Watch Now - Worldwide`;
+
+
 
 body.appendChild(
-indiaBtn
+indianBtn
 );
 
 body.appendChild(
-qualityWrap
+btnWrap
 );
 
 body.appendChild(
@@ -294,25 +445,27 @@ worldBtn
 
 else{
 
-body.innerHTML+=`
+const noStream=
+document.createElement(
+"div"
+);
 
-<div class="
-w-full
-bg-gray-800
-text-gray-400
-rounded-lg
-mt-4
-py-2
-text-center
-">
+noStream.className=
+"w-full bg-gray-800 text-gray-400 py-2 px-4 rounded-lg mt-3 text-center";
 
-No stream available yet
+noStream.innerHTML=
+`<i class="fas fa-clock mr-2"></i>No stream available yet`;
 
-</div>
-
-`;
+body.appendChild(
+noStream
+);
 
 }
+
+
+
+card.innerHTML=
+headerHTML;
 
 card.appendChild(
 body
@@ -324,9 +477,7 @@ card
 
 });
 
-}
-
-loadMatches();
+});
 
 </script>
 
