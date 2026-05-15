@@ -1,84 +1,107 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
 
+<title>Worldwide Player</title>
+
 <meta charset="UTF-8">
 
-<meta
-name="viewport"
-content="width=device-width,initial-scale=1">
+<meta name="viewport"
+content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
 
-<title>
-Worldwide Player
-</title>
+<meta name="referrer" content="no-referrer"/>
 
-<script src="proxyurl.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<link rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/plyr@3.6.12/dist/plyr.css"/>
 
 <style>
 
+html,
 body{
 margin:0;
+padding:0;
+height:100%;
 background:#000;
-font-family:sans-serif;
-color:white;
 overflow:hidden;
+font-family:Arial,sans-serif;
 }
 
 video{
 width:100%;
-height:100vh;
-background:black;
+height:100%;
+max-width:100%;
 display:none;
 }
 
-#msg{
+.plyr{
+height:100%;
+}
+
+.loading{
 position:fixed;
 top:50%;
 left:50%;
 transform:translate(-50%,-50%);
-font-size:18px;
-color:white;
 text-align:center;
-z-index:999;
+color:#fff;
+z-index:9999;
 }
 
 .loader{
-
-width:42px;
-height:42px;
-
-border:
-4px solid #333;
-
-border-top:
-4px solid red;
-
+width:45px;
+height:45px;
+border:4px solid #333;
+border-top:4px solid red;
 border-radius:50%;
-
 margin:auto;
 margin-bottom:15px;
-
-animation:
-spin .9s linear infinite;
-
+animation:spin .9s linear infinite;
 }
 
 @keyframes spin{
-
 100%{
-transform:
-rotate(360deg);
+transform:rotate(360deg);
 }
-
 }
 
 .small{
 font-size:13px;
 color:#aaa;
-margin-top:10px;
+margin-top:8px;
+}
+
+.popup{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.9);
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:99999;
+}
+
+.popupbox{
+width:90%;
+max-width:340px;
+background:#171717;
+padding:25px;
+border-radius:18px;
+text-align:center;
+}
+
+.btn{
+display:block;
+padding:13px;
+background:red;
+border-radius:10px;
+color:white;
+text-decoration:none;
+font-weight:bold;
+margin-top:20px;
 }
 
 </style>
@@ -87,7 +110,9 @@ margin-top:10px;
 
 <body>
 
-<div id="msg">
+<div
+id="loading"
+class="loading">
 
 <div class="loader"></div>
 
@@ -103,18 +128,26 @@ Preparing player
 
 
 <video
-id="video"
-controls
+id="player"
 autoplay
+muted
+controls
+crossorigin
 playsinline>
 </video>
 
+
+<script src="proxyurl.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.1.4/dist/hls.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/plyr@3.6.12/dist/plyr.min.js"></script>
 
 <script>
 
 const params=
 new URLSearchParams(
-location.search
+window.location.search
 );
 
 const id=
@@ -122,19 +155,18 @@ params.get("id");
 
 const video=
 document.getElementById(
-"video"
+"player"
 );
 
-const msg=
+const loading=
 document.getElementById(
-"msg"
+"loading"
 );
 
 
-// KEEP OLD WORKING FLOW
+// LOCATION DETECT
 
 setTimeout(()=>{
-
 
 fetch(
 "https://ipapi.co/json/?t="+Date.now(),
@@ -143,9 +175,12 @@ cache:"no-store"
 }
 )
 
-.then(r=>r.json())
+.then(
+r=>r.json()
+)
 
-.then(async geo=>{
+.then(
+async geo=>{
 
 const country=
 (
@@ -154,73 +189,34 @@ geo.country_code||
 )
 .toUpperCase();
 
-console.log(
-"Country:",
-country
-);
 
+// INDIA
 
-// INDIA POPUP
-
-if(country==="IN"){
+if(
+country==="IN"
+){
 
 document.body.innerHTML=`
 
-<div style="
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,.85);
-display:flex;
-justify-content:center;
-align-items:center;
-z-index:9999;
-">
+<div class="popup">
 
-<div style="
-width:90%;
-max-width:350px;
-background:#171717;
-padding:25px;
-border-radius:18px;
-text-align:center;
-box-shadow:0 0 20px rgba(255,0,0,.3);
-">
+<div class="popupbox">
 
-<h2 style="
-font-size:24px;
-margin-bottom:15px;
-">
+<h2>
 
 Your location is India
 
 </h2>
 
-<p style="
-color:#aaa;
-margin-bottom:25px;
-">
+<p class="small">
 
-Use Indian stream player
+Use Indian Users Button
 
 </p>
 
 <a
-
 href="javascript:history.back()"
-
-style="
-display:block;
-background:#ff0000;
-padding:14px;
-border-radius:12px;
-color:white;
-font-size:18px;
-text-decoration:none;
-font-weight:bold;
-">
+class="btn">
 
 Watch Now - Indian Users
 
@@ -237,73 +233,130 @@ return;
 }
 
 
-// WORLD PLAYER
+// WORLD LOAD
+
+const source=
+await getStream();
+
+if(!source){
+
+document.body.innerHTML=
+"<h2 style='color:white;text-align:center'>Stream Not Found</h2>";
+
+return;
+
+}
+
+loading.style.display="none";
+
+video.style.display="block";
+
+startPlayer(source);
+
+});
+
+},2000);
+
+
+// ====================================
+// APPLY PROXY
+// ====================================
+
+function applyProxy(url){
+
+return url.replace(
+/https:\/\/[^/]+\/mumbai/i,
+`${PROXY_URL}/mumbai`
+);
+
+}
+
+
+// ====================================
+// DRM FIX
+// ====================================
+
+function convertToIndex(url){
+
+return url.replace(
+/\/(240|360|480|540|720|1080)p\.m3u8/i,
+"/index.m3u8"
+);
+
+}
+
+
+// ====================================
+// GET STREAM
+// ====================================
+
+async function getStream(){
 
 const matchId=
 id.split("_")[0];
-
 
 const res=
 await fetch(
 "https://famcode.lchd-football.workers.dev/"
 );
 
-const data=
+const json=
 await res.json();
 
-
 const match=
-data.matches.find(
+json.matches.find(
 m=>
-
-String(
-m.match_id
-)
-
-===matchId
-
+String(m.match_id)===matchId
 );
 
+if(!match)return null;
 
-let url=
+const auto=
+match?.auto_streams?.[0]?.auto;
 
-match
-.auto_streams?.[0]
-?.auto
-.match(
-/https.*1080p\.m3u8/
-)?.[0];
+if(!auto)return null;
 
 
-url=
+const found=
 
-url
-
-.replace(
-/https:\/\/.*?\/mumbai\//,
-PROXY_URL+"/mumbai/"
-)
-
-.replace(
-"1080p.m3u8",
-"index.m3u8"
+auto.match(
+/https.*(240|360|480|540|720|1080)p\.m3u8[^\n]*/i
 );
 
+if(!found)return null;
 
-msg.style.display=
-"none";
+let stream=
+found[0].trim();
 
-video.style.display=
-"block";
+stream=
+convertToIndex(
+stream
+);
+
+stream=
+applyProxy(
+stream
+);
+
+return stream;
+
+}
 
 
-if (Hls.isSupported()) {
+// ====================================
+// PLAYER
+// ====================================
 
-const hls = new Hls({
+function startPlayer(source){
+
+if(Hls.isSupported()){
+
+const hls=
+new Hls({
 maxMaxBufferLength:100
 });
 
-hls.loadSource(url);
+hls.loadSource(source);
 
 hls.attachMedia(video);
 
@@ -319,19 +372,19 @@ level=>level.height
 const defaultQuality=
 availableQualities[0];
 
-new Plyr(
-video,
-{
+new Plyr(video,{
+
 controls:[
-'play-large',
-'play',
-'mute',
-'volume',
-'settings',
-'fullscreen'
+"play-large",
+"play",
+"mute",
+"volume",
+"settings",
+"fullscreen"
 ],
 
 quality:{
+
 default:defaultQuality,
 
 options:availableQualities,
@@ -341,14 +394,13 @@ forced:true,
 onChange:(quality)=>{
 
 hls.levels.forEach(
-(level,levelIndex)=>{
+(level,index)=>{
 
 if(
 level.height===quality
 ){
 
-hls.currentLevel=
-levelIndex;
+hls.currentLevel=index;
 
 }
 
@@ -358,21 +410,13 @@ levelIndex;
 
 }
 
-}
-);
-
-
-// IMPORTANT
-hls.attachMedia(video);
-hls.loadSource(url);
+});
 
 document.addEventListener(
-'fullscreenchange',
+"fullscreenchange",
 ()=>{
 
-if(
-document.fullscreenElement
-){
+if(document.fullscreenElement){
 
 if(
 screen.orientation &&
@@ -380,7 +424,7 @@ screen.orientation.lock
 ){
 
 screen.orientation
-.lock('landscape')
+.lock("landscape")
 .catch(()=>{});
 
 }
@@ -392,9 +436,7 @@ screen.orientation &&
 screen.orientation.unlock
 ){
 
-screen.orientation
-.unlock()
-.catch(()=>{});
+screen.orientation.unlock();
 
 }
 
@@ -404,35 +446,21 @@ screen.orientation
 
 });
 
-} else if (
+}else if(
 
 video.canPlayType(
-'application/vnd.apple.mpegurl'
+"application/vnd.apple.mpegurl"
 )
 
 ){
 
-video.src=url;
+video.src=source;
 
 new Plyr(video);
 
-}else{
-
-document.body.innerHTML=
-'<p style="color:white;text-align:center">Browser does not support HLS playback.</p>';
-
 }
 
-})
-
-.catch(()=>{
-
-msg.innerHTML=
-"Unable to detect location";
-
-});
-
-},2000);
+}
 
 </script>
 
