@@ -2,13 +2,14 @@
 <html lang="en">
 
 <head>
-<meta charset="UTF-8"/>
-<title>Fancode Live</title>
+<meta charset="UTF-8">
+<title>Fancode Live Matches</title>
 
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="no-referrer">
 
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 
 <style>
@@ -32,9 +33,15 @@ animation:pulse 1.5s infinite;
 }
 
 @keyframes pulse{
-0%{box-shadow:0 0 0 0 rgba(255,0,0,.7);}
-70%{box-shadow:0 0 0 10px rgba(255,0,0,0);}
-100%{box-shadow:0 0 0 0 rgba(255,0,0,0);}
+0%{
+box-shadow:0 0 0 0 rgba(255,0,0,.7);
+}
+70%{
+box-shadow:0 0 0 10px rgba(255,0,0,0);
+}
+100%{
+box-shadow:0 0 0 0 rgba(255,0,0,0);
+}
 }
 
 </style>
@@ -51,88 +58,102 @@ Fancode Live
 
 <div
 id="matches-container"
-class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+class="
+grid
+grid-cols-1
+sm:grid-cols-2
+lg:grid-cols-3
+gap-8
+">
 </div>
 
 </div>
 
 <script>
 
-const container=
+const container =
 document.getElementById(
 "matches-container"
 );
 
-const DATA_URL=
+const DATA_URL =
 "https://famcode.lchd-football.workers.dev/";
 
-const OLD_PLAYER=
-"https://joeshpmorepha.github.io/test-by-own/check";
+const OLD_PLAYER =
+"https://yourdomain.com/check";
 
-const WORLD_PLAYER=
-"https://joeshpmorepha.github.io/test-by-own/check2";
+const WORLD_PLAYER =
+"https://yourdomain.com/world.html";
 
 
 // =====================
-// GEO
+// COUNTRY DETECTION
 // =====================
 
-async function detectCountry(){
+function detectIndiaMode(){
 
-try{
+return fetch(
+'https://ipapi.co/json/'
+)
 
-const response=
-await fetch(
-"https://ipapi.co/json/?"+Date.now(),
-{
-cache:"no-store"
-}
+.then(response=>{
+
+if(!response.ok){
+
+throw new Error(
+`geo api ${response.status}`
 );
 
-const data=
-await response.json();
+}
+
+return response.json();
+
+})
+
+.then(data=>{
+
+const country =
+
+data.country_code ||
+
+data.country ||
+
+"";
 
 console.log(
-"GEO:",
+'📍 detected:',
+country,
 data
 );
 
-const country=
-String(
-data.country||
-""
-)
-.trim()
-.toUpperCase();
-
-const code=
-String(
-data.country_code||
-""
-)
-.trim()
-.toUpperCase();
-
 if(
-country==="IN"
-||
-code==="IN"
+String(country)
+.toUpperCase()
+==="IN"
 ){
+
 return true;
+
 }
 
 return false;
 
+})
+
+.catch(error=>{
+
+console.warn(
+'geo failed:',
+error
+);
+
+// default world
+
+return false;
+
+});
+
 }
-
-catch{
-
-return true;
-
-}
-
-}
-
 
 
 // =====================
@@ -144,12 +165,12 @@ label,
 href
 ){
 
-const a=
+const a =
 document.createElement(
 "a"
 );
 
-a.href=href;
+a.href = href;
 
 a.target="_blank";
 
@@ -179,9 +200,8 @@ return a;
 }
 
 
-
 // =====================
-// LOAD
+// LOAD MATCHES
 // =====================
 
 async function loadMatches(
@@ -233,9 +253,7 @@ border-gray-800
 
 
 const img=
-
 match.image||
-
 "https://www.fancode.com/skillup-uploads/cms-media/Cricket_Fallback_Old_match-card.jpg";
 
 
@@ -262,9 +280,8 @@ rounded-xl
 object-cover
 ">
 
-${
-isLive
-?
+${isLive?
+
 `
 <span
 class="
@@ -278,28 +295,42 @@ rounded-full
 text-xs
 live-badge
 ">
+
 LIVE
+
 </span>
+
 `
-:""
-}
+:""}
 
 </div>
 
+
 <h2 class="text-xl font-semibold mt-4">
+
 ${match.title||"Match"}
+
 </h2>
 
+
 <p class="text-gray-400 text-sm mt-1">
+
 ${match.tournament||""}
+
 </p>
 
+
 <p class="text-gray-500 text-sm mt-2">
+
 ${match.startTime||""}
+
 </p>
 
+
 <p class="text-gray-500 text-sm mt-2">
+
 ${match.language||""}
+
 </p>
 
 `;
@@ -347,14 +378,14 @@ mt-4
 `;
 
 
+// INDIA
 
 if(isIndia){
 
 const master=
-match.auto_streams?.[0]?.auto||"";
+match.auto_streams?.[0]?.auto || "";
 
-const qualities=
-[
+const qualities=[
 ...master.matchAll(
 /(\d+)p\.m3u8/g
 )
@@ -363,14 +394,16 @@ const qualities=
 qualities.forEach(
 q=>{
 
-const quality=
-q[1];
+const quality=q[1];
 
 btnWrap.appendChild(
 
 makeBtn(
+
 quality+"p",
+
 `${OLD_PLAYER}?id=${match.match_id}_${match.language}&q=${quality}`
+
 )
 
 );
@@ -379,13 +412,19 @@ quality+"p",
 
 }
 
+
+// WORLD
+
 else{
 
 btnWrap.appendChild(
 
 makeBtn(
+
 "Watch Now",
+
 `${WORLD_PLAYER}?id=${match.match_id}_${match.language}`
+
 )
 
 );
@@ -401,6 +440,7 @@ btnWrap.classList.toggle(
 
 };
 
+
 body.appendChild(
 toggle
 );
@@ -414,7 +454,9 @@ btnWrap
 else{
 
 body.innerHTML+=`
-<div class="
+
+<div
+class="
 w-full
 bg-gray-800
 text-gray-400
@@ -423,16 +465,25 @@ mt-4
 py-2
 text-center
 ">
+
 <i class="fas fa-clock mr-2"></i>
+
 No stream available yet
+
 </div>
+
 `;
 
 }
 
-card.appendChild(body);
 
-container.appendChild(card);
+card.appendChild(
+body
+);
+
+container.appendChild(
+card
+);
 
 });
 
@@ -446,10 +497,10 @@ container.appendChild(card);
 (async()=>{
 
 const isIndia=
-await detectCountry();
+await detectIndiaMode();
 
 console.log(
-"INDIA MODE:",
+"India mode:",
 isIndia
 );
 
