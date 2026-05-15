@@ -148,7 +148,8 @@ document.getElementById(
 setTimeout(()=>{
 
 fetch(
-"https://ipapi.co/json/)
+"https://ipapi.co/json/?t="+Date.now()
+)
 
 .then(
 r=>r.json()
