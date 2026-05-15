@@ -143,24 +143,31 @@ playsinline>
 
 <script>
 
-const params=new URLSearchParams(location.search);
+const params=
+new URLSearchParams(
+window.location.search
+);
 
-const id=params.get("id");
+const id=
+params.get("id");
 
-const video=document.getElementById("player");
+const video=
+document.getElementById(
+"player"
+);
 
-const loading=document.getElementById("loading");
+const loading=
+document.getElementById(
+"loading"
+);
 
 
-// OLD WORKING LOCATION DETECTION
+// EXACT OLD DETECTION
 
 setTimeout(()=>{
 
 fetch(
-"https://ipapi.co/json/?t="+Date.now(),
-{
-cache:"no-store"
-}
+"https://ipapi.co/json/?t="+Date.now()
 )
 
 .then(r=>r.json())
@@ -168,11 +175,18 @@ cache:"no-store"
 .then(async geo=>{
 
 const country=
-(geo.country_code||"")
+(
+geo.country_code||""
+)
 .toUpperCase();
 
+console.log(
+"Country:",
+country
+);
 
-// INDIA POPUP
+
+// INDIA
 
 if(country==="IN"){
 
@@ -183,11 +197,15 @@ document.body.innerHTML=`
 <div class="popupbox">
 
 <h2>
+
 Your location is India
+
 </h2>
 
 <p class="small">
+
 Use Indian Users Button
+
 </p>
 
 <a
@@ -211,7 +229,8 @@ return;
 
 // WORLD PLAYER
 
-const matchId=id.split("_")[0];
+const matchId=
+id.split("_")[0];
 
 const res=
 await fetch(
@@ -223,7 +242,8 @@ await res.json();
 
 const match=
 json.matches.find(
-m=>String(m.match_id)===matchId
+m=>
+String(m.match_id)===matchId
 );
 
 if(!match){
@@ -234,7 +254,6 @@ loading.innerHTML=
 return;
 
 }
-
 
 const auto=
 match?.auto_streams?.[0]?.auto;
@@ -248,8 +267,6 @@ return;
 
 }
 
-
-// FIND ANY QUALITY
 
 const found=
 auto.match(
@@ -267,9 +284,6 @@ return;
 
 let source=
 found[0].trim();
-
-
-// PROXY + INDEX
 
 source=
 
@@ -293,7 +307,7 @@ video.style.display=
 "block";
 
 
-// YOUR ORIGINAL PLAYER
+// PLAYER
 
 if(Hls.isSupported()){
 
@@ -302,9 +316,13 @@ new Hls({
 maxMaxBufferLength:100
 });
 
-hls.loadSource(source);
+hls.loadSource(
+source
+);
 
-hls.attachMedia(video);
+hls.attachMedia(
+video
+);
 
 hls.on(
 Hls.Events.MANIFEST_PARSED,
@@ -312,13 +330,12 @@ Hls.Events.MANIFEST_PARSED,
 
 const availableQualities=
 hls.levels.map(
-level=>level.height
+l=>l.height
 );
 
-const defaultQuality=
-availableQualities[0];
-
-new Plyr(video,{
+new Plyr(
+video,
+{
 
 controls:[
 'play-large',
@@ -330,11 +347,17 @@ controls:[
 ],
 
 quality:{
-default:defaultQuality,
-options:availableQualities,
+
+default:
+availableQualities[0],
+
+options:
+availableQualities,
+
 forced:true,
 
-onChange:(quality)=>{
+onChange:
+quality=>{
 
 hls.levels.forEach(
 (level,index)=>{
@@ -351,76 +374,50 @@ hls.currentLevel=index;
 
 }
 
-});
+}
 
-
-document.addEventListener(
-"fullscreenchange",
-()=>{
-
-if(document.fullscreenElement){
-
-if(
-screen.orientation &&
-screen.orientation.lock
-){
-
-screen.orientation
-.lock("landscape")
-.catch(()=>{});
+);
 
 }
 
-}else{
-
-if(
-screen.orientation &&
-screen.orientation.unlock
-){
-
-screen.orientation.unlock();
-
-}
-
-}
-
-});
-
-});
+);
 
 }
 
 else if(
+
 video.canPlayType(
 'application/vnd.apple.mpegurl'
 )
+
 ){
 
-video.src=source;
+video.src=
+source;
 
 new Plyr(video);
 
 }
 
-else{
-
-document.body.innerHTML=
-"<h2 style='color:white'>HLS not supported</h2>";
-
-}
-
 })
 
-.catch(()=>{
 
-loading.innerHTML=
-"Unable to detect location";
+// fallback if api fails
+
+.catch(error=>{
+
+console.log(
+error
+);
+
+// assume non-india if api fails
+
+location.reload();
 
 });
 
 },2000);
 
 </script>
-
 </body>
 </html>
