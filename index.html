@@ -4,12 +4,10 @@
 <head>
 
 <meta charset="UTF-8"/>
-<title>Fancode - Matches</title>
+<title> Live</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta name="referrer" content="no-referrer">
-
-<link rel="shortcut icon" href="#"/>
 
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
@@ -45,27 +43,16 @@ box-shadow:0 0 15px 10px rgba(239,68,68,0);
 }
 }
 
-.match-img{
-transition:transform .3s;
-}
-
-.match-card:hover .match-img{
-transform:scale(1.03);
-}
-
 </style>
 
 </head>
 
 <body class="bg-gray-950 min-h-screen">
 
-<div class="max-w-7xl mx-auto px-4 py-8 sm:py-10">
+<div class="max-w-7xl mx-auto px-4 py-8">
 
-<h1 id="page-title"
-class="text-3xl sm:text-4xl font-bold text-center text-white mb-8 tracking-wide">
-
+<h1 class="text-4xl font-bold text-center mb-8">
 Fancode Live
-
 </h1>
 
 <div id="matches-container"
@@ -81,39 +68,40 @@ document.getElementById("matches-container");
 const DATA_URL =
 "https://famcode.lchd-football.workers.dev/";
 
-const PLAYER_URL =
-"https://joeshpmorepha.github.io/test-by-own/player.html";
+const OLD_PLAYER =
+"https://yourdomain.com/check";
+
+const WORLD_PLAYER =
+"https://yourdomain.com/world.html";
+
+let USER_COUNTRY = "IN";
 
 // ====================================
-// URL PARAMS
+// COUNTRY
 // ====================================
 
-const params =
-new URLSearchParams(window.location.search);
+async function getCountry(){
 
-let tournamentId =
-params.get("id");
+try{
 
-// ====================================
-// TITLE
-// ====================================
+const r =
+await fetch(
+"https://ipapi.co/json/"
+);
 
-if(tournamentId){
+const j =
+await r.json();
 
-const readableTitle =
-decodeURIComponent(tournamentId)
-.replace(/_/g," ")
-.replace(/\b\w/g,c=>c.toUpperCase())
-.replace(/\bVs\b/g,"vs");
+USER_COUNTRY =
+j.country_code || "IN";
 
-document.getElementById("page-title")
-.innerText = readableTitle;
+}
 
-document.title =
-readableTitle + " - Matches";
+catch{
 
-tournamentId =
-readableTitle.toLowerCase();
+USER_COUNTRY = "IN";
+
+}
 
 }
 
@@ -141,63 +129,21 @@ return a;
 }
 
 // ====================================
-// LOAD MATCHES
+// LOAD
 // ====================================
 
-fetch(DATA_URL)
+async function loadMatches(){
 
-.then(r=>r.json())
+await getCountry();
 
-.then(data=>{
+const response =
+await fetch(DATA_URL);
 
-let matches =
-Array.isArray(data.matches)
-? data.matches
-: [];
+const data =
+await response.json();
 
-// ====================================
-// FILTER
-// ====================================
-
-if(tournamentId){
-
-matches =
-matches.filter(m=>{
-
-const t =
-(m.tournament || "")
-.toLowerCase();
-
-const title =
-(m.title || "")
-.toLowerCase();
-
-return (
-t.includes(tournamentId) ||
-title.includes(tournamentId)
-);
-
-});
-
-}
-
-// ====================================
-// SORT LIVE
-// ====================================
-
-matches.sort((a,b)=>{
-
-const aLive =
-(a.status || "").toUpperCase() === "LIVE" ||
-(a.streamingStatus || "").toUpperCase() === "STARTED";
-
-const bLive =
-(b.status || "").toUpperCase() === "LIVE" ||
-(b.streamingStatus || "").toUpperCase() === "STARTED";
-
-return (bLive?1:0)-(aLive?1:0);
-
-});
+const matches =
+data.matches || [];
 
 // ====================================
 // LOOP
@@ -209,40 +155,24 @@ const isLive =
 (match.status || "").toUpperCase() === "LIVE" ||
 (match.streamingStatus || "").toUpperCase() === "STARTED";
 
-const imgSrc =
-match.image ||
-(match.image_cdn &&
-(match.image_cdn.APP ||
-match.image_cdn.BG_IMAGE)) ||
-"https://www.fancode.com/skillup-uploads/cms-media/Cricket_Fallback_Old_match-card.jpg";
-
 const card =
 document.createElement("div");
 
 card.className =
-`rounded-2xl overflow-hidden shadow-xl match-card border border-gray-800 ${isLive?"ring-2 ring-red-600":""}`;
+"rounded-2xl overflow-hidden shadow-xl match-card border border-gray-800";
 
-const headerHTML = `
-<div class="relative">
-
-<img src="${imgSrc}"
-class="w-full h-48 sm:h-60 md:h-64 lg:h-72 object-cover object-top match-img">
-
-${isLive
-? `<span class="absolute top-3 left-3 bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md live-badge">LIVE</span>`
-: ""}
-
-</div>
-`;
+const img =
+match.image ||
+"https://www.fancode.com/skillup-uploads/cms-media/Cricket_Fallback_Old_match-card.jpg";
 
 const btnWrap =
 document.createElement("div");
 
 btnWrap.className =
-"flex flex-col sm:flex-row sm:flex-wrap gap-3 hidden mt-4";
+"flex flex-wrap gap-3 hidden mt-4";
 
 // ====================================
-// QUALITY BUTTONS
+// STREAM BUTTONS
 // ====================================
 
 if(
@@ -251,22 +181,28 @@ match.auto_streams &&
 match.auto_streams.length
 ){
 
+const lang =
+(match.language || "ENGLISH")
+.toUpperCase();
+
+// ====================================
+// INDIA
+// ====================================
+
+if(USER_COUNTRY === "IN"){
+
 const master =
 match.auto_streams[0].auto;
 
 const qualities =
 [...master.matchAll(/(\d+)p\.m3u8/g)];
 
-const lang =
-(match.language || "ENGLISH")
-.toUpperCase();
-
 qualities.forEach(q=>{
 
 const quality = q[1];
 
 const href =
-`${PLAYER_URL}?id=${match.match_id}_${lang}&q=${quality}`;
+`${OLD_PLAYER}?id=${match.match_id}_${lang}&q=${quality}`;
 
 btnWrap.appendChild(
 makeBtn(`${quality}p`,href)
@@ -277,36 +213,52 @@ makeBtn(`${quality}p`,href)
 }
 
 // ====================================
-// BODY
+// WORLDWIDE
 // ====================================
+
+else{
+
+const href =
+`${WORLD_PLAYER}?id=${match.match_id}_${lang}`;
+
+btnWrap.appendChild(
+makeBtn("Watch Now",href)
+);
+
+}
+
+}
 
 const body =
 document.createElement("div");
 
 body.className =
-"p-5 sm:p-6";
+"p-5";
 
 body.innerHTML = `
-<h2 class="text-xl sm:text-2xl font-semibold text-white mb-1">
+<div class="relative">
+
+<img src="${img}"
+class="w-full h-60 object-cover rounded-xl">
+
+${isLive
+? `<span class="absolute top-3 left-3 bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-full live-badge">LIVE</span>`
+: ""}
+
+</div>
+
+<h2 class="text-xl font-semibold mt-4">
 ${match.title || "Match"}
 </h2>
 
-<p class="text-gray-400 text-sm mb-1">
+<p class="text-gray-400 text-sm mt-1">
 ${match.tournament || ""}
 </p>
 
-<p class="text-sm text-gray-500 mb-2">
+<p class="text-gray-500 text-sm mt-2">
 ${match.startTime || ""}
 </p>
-
-<p class="text-sm text-gray-500 mb-3">
-${match.language || ""}
-</p>
 `;
-
-// ====================================
-// LIVE BUTTON
-// ====================================
 
 if(isLive){
 
@@ -314,7 +266,7 @@ const toggleBtn =
 document.createElement("button");
 
 toggleBtn.className =
-"w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold py-2 px-4 rounded-lg mt-3";
+"w-full bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold py-2 px-4 rounded-lg mt-4";
 
 toggleBtn.innerHTML =
 `<i class="fas fa-tv mr-2"></i>Watch Now`;
@@ -329,30 +281,15 @@ body.appendChild(btnWrap);
 
 }
 
-else{
-
-const noStream =
-document.createElement("div");
-
-noStream.className =
-"w-full bg-gray-800 text-gray-400 py-2 px-4 rounded-lg mt-3 text-center";
-
-noStream.innerHTML =
-`<i class="fas fa-clock mr-2"></i>No stream available yet`;
-
-body.appendChild(noStream);
-
-}
-
-card.innerHTML = headerHTML;
-
 card.appendChild(body);
 
 container.appendChild(card);
 
 });
 
-});
+}
+
+loadMatches();
 
 </script>
 
