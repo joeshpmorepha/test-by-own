@@ -1,101 +1,83 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+
 <head>
+
 <meta charset="UTF-8">
+
 <meta
 name="viewport"
 content="width=device-width,initial-scale=1">
 
-<title>WorldWide Player</title>
+<title>
+Famcode - Matches
+</title>
 
 <meta
 name="referrer"
 content="no-referrer"/>
 
+<script src="proxyurl.js"></script>
+
 <link rel="stylesheet"
 href="https://cdn.jsdelivr.net/npm/plyr@3.6.12/dist/plyr.css"/>
 
-<script src="proxyurl.js"></script>
-
 <style>
 
-html,body{
+body{
 margin:0;
-height:100%;
 background:#000;
+font-family:sans-serif;
 overflow:hidden;
-font-family:Arial,sans-serif;
 }
 
 video{
 width:100%;
-height:100%;
+height:100vh;
 display:none;
 }
 
-.loading{
+#msg{
 position:fixed;
 top:50%;
 left:50%;
 transform:translate(-50%,-50%);
-text-align:center;
+font-size:18px;
 color:white;
-z-index:9999;
+text-align:center;
+z-index:999;
 }
 
 .loader{
-width:45px;
-height:45px;
-border:4px solid #333;
-border-top:4px solid red;
+
+width:42px;
+height:42px;
+
+border:
+4px solid #333;
+
+border-top:
+4px solid red;
+
 border-radius:50%;
+
 margin:auto;
 margin-bottom:15px;
-animation:spin .9s linear infinite;
+
+animation:
+spin .9s linear infinite;
+
 }
 
 @keyframes spin{
+
 100%{
-transform:rotate(360deg);
-}
+
+transform:
+rotate(360deg);
+
 }
 
-.small{
-font-size:14px;
-color:#aaa;
-}
-
-.popup{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,.9);
-display:flex;
-justify-content:center;
-align-items:center;
-z-index:99999;
-}
-
-.popupbox{
-width:90%;
-max-width:340px;
-background:#171717;
-padding:25px;
-border-radius:18px;
-text-align:center;
-}
-
-.btn{
-display:block;
-padding:13px;
-background:red;
-border-radius:10px;
-color:white;
-text-decoration:none;
-font-weight:bold;
-margin-top:20px;
 }
 
 </style>
@@ -104,27 +86,19 @@ margin-top:20px;
 
 <body>
 
-<div
-id="loading"
-class="loading">
+<div id="msg">
 
 <div class="loader"></div>
 
-<div>
 Checking location...
-</div>
-
-<div class="small">
-Preparing player
-</div>
 
 </div>
 
 
 <video
-id="player"
-autoplay
+id="video"
 controls
+autoplay
 playsinline
 crossorigin>
 </video>
@@ -133,7 +107,6 @@ crossorigin>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.1.4/dist/hls.min.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/plyr@3.6.12/dist/plyr.min.js"></script>
-
 
 <script>
 
@@ -147,18 +120,19 @@ params.get("id");
 
 const video=
 document.getElementById(
-"player"
+"video"
 );
 
-const loading=
+const msg=
 document.getElementById(
-"loading"
+"msg"
 );
 
 
-// keep your delay
+// KEEP YOUR OLD DETECTION
 
 setTimeout(()=>{
+
 
 fetch(
 "https://ipapi.co/json/?t="+Date.now(),
@@ -167,51 +141,50 @@ cache:"no-store"
 }
 )
 
-.then(response=>{
-
-if(!response.ok){
-
-throw new Error(
-`geo api ${response.status}`
-);
-
-}
-
-return response.json();
-
-})
+.then(r=>r.json())
 
 .then(async geo=>{
 
-console.log(
-"GEO:",
-geo
-);
-
 const country=
-
 (
 geo.country_code||
-
-geo.country||
-
 ""
 )
-
 .toUpperCase();
 
+console.log(
+"Country:",
+country
+);
 
-// INDIA
 
-if(
-country==="IN"
-){
+// INDIA POPUP
+
+if(country==="IN"){
 
 document.body.innerHTML=`
 
-<div class="popup">
+<div style="
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.85);
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:9999;
+">
 
-<div class="popupbox">
+<div style="
+width:90%;
+max-width:350px;
+background:#171717;
+padding:25px;
+border-radius:18px;
+text-align:center;
+">
 
 <h2>
 
@@ -219,15 +192,28 @@ Your location is India
 
 </h2>
 
-<p class="small">
+<p style="
+color:#aaa;
+">
 
-Use Indian Users Button
+Use Indian stream player
 
 </p>
 
 <a
+
 href="javascript:history.back()"
-class="btn">
+
+style="
+display:block;
+background:red;
+padding:14px;
+border-radius:12px;
+margin-top:20px;
+text-decoration:none;
+color:white;
+font-weight:bold;
+">
 
 Watch Now - Indian Users
 
@@ -244,7 +230,7 @@ return;
 }
 
 
-// WORLD
+// WORLD PLAYER
 
 const matchId=
 id.split("_")[0];
@@ -281,18 +267,10 @@ match
 )?.[0];
 
 
-if(!url){
-
-throw new Error(
-"No stream found"
-);
-
-}
-
-
 url=
 
 url
+
 .replace(
 /https:\/\/.*?\/mumbai\//,
 PROXY_URL+"/mumbai/"
@@ -304,13 +282,14 @@ PROXY_URL+"/mumbai/"
 );
 
 
-loading.style.display=
+msg.style.display=
 "none";
 
 video.style.display=
 "block";
 
 
+// PLAYER FROM YOUR WORKING CODE
 
 if(
 Hls.isSupported()
@@ -334,11 +313,11 @@ hls.on(
 Hls.Events.MANIFEST_PARSED,
 ()=>{
 
-const qualities=
+const availableQualities=
 
 hls.levels
 .map(
-l=>l.height
+level=>level.height
 );
 
 
@@ -360,10 +339,10 @@ controls:[
 quality:{
 
 default:
-qualities[0],
+availableQualities[0],
 
 options:
-qualities,
+availableQualities,
 
 forced:true,
 
@@ -408,27 +387,10 @@ new Plyr(video);
 
 })
 
-.catch(error=>{
+.catch(()=>{
 
-console.log(
-error
-);
-
-loading.innerHTML=`
-
-<div>
-
-Unable to detect location
-
-</div>
-
-<div class="small">
-
-Try refreshing
-
-</div>
-
-`;
+msg.innerHTML=
+"Unable to detect location";
 
 });
 
