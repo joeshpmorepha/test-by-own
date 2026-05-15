@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-<meta charset="UTF-8">
-<title>fancode</title>
 
-<meta name="viewport"
+<meta charset="UTF-8">
+<title>Worldwide Player</title>
+
+<meta
+name="viewport"
 content="width=device-width,initial-scale=1">
 
-<meta name="referrer"
+<meta
+name="referrer"
 content="no-referrer"/>
 
 <link rel="stylesheet"
@@ -73,6 +75,7 @@ transform:rotate(360deg);
 .small{
 font-size:13px;
 color:#aaa;
+margin-top:8px;
 }
 
 </style>
@@ -81,7 +84,9 @@ color:#aaa;
 
 <body>
 
-<div id="loading" class="loading">
+<div
+id="loading"
+class="loading">
 
 <div class="loader"></div>
 
@@ -130,7 +135,7 @@ const loading=
 document.getElementById("loading");
 
 
-// COUNTRY DETECTION
+// COUNTRY
 
 async function detectCountry(){
 
@@ -148,23 +153,21 @@ const data=
 await r.json();
 
 console.log(
-"CF DATA:",
+"RAW:",
 data
 );
 
 return(
-data.country||
-""
-).toUpperCase();
+data.country||""
+)
+.trim()
+.toUpperCase();
 
 }
 
 catch(e){
 
 console.log(e);
-
-// if detection fails,
-// continue with world
 
 return "UNKNOWN";
 
@@ -174,7 +177,7 @@ return "UNKNOWN";
 
 
 
-// WORLD PLAYER
+// PLAYER
 
 async function startWorldPlayer(){
 
@@ -223,10 +226,7 @@ return;
 }
 
 
-// FIND QUALITY
-
 const found=
-
 auto.match(
 /https:\/\/[^\n]+?(240|360|480|540|720|1080)p\.m3u8[^\n]*/i
 );
@@ -246,7 +246,7 @@ let stream=
 found[0].trim();
 
 
-// QUALITY TO INDEX
+// quality → index
 
 stream=
 stream.replace(
@@ -255,7 +255,7 @@ stream.replace(
 );
 
 
-// CDN TO PROXY
+// proxy
 
 stream=
 stream.replace(
@@ -282,8 +282,6 @@ document
 
 
 
-// APPLE
-
 const isAppleSafari=
 
 /iPad|iPhone|iPod|Macintosh/.test(
@@ -303,6 +301,8 @@ navigator.userAgent
 );
 
 
+// APPLE
+
 if(
 isAppleSafari &&
 video.canPlayType(
@@ -310,15 +310,13 @@ video.canPlayType(
 )
 ){
 
-video.src=
-stream;
+video.src=stream;
 
 new Plyr(video);
 
 return;
 
 }
-
 
 
 // HLS
@@ -330,14 +328,9 @@ new Hls({
 maxMaxBufferLength:100
 });
 
-hls.loadSource(
-stream
-);
+hls.loadSource(stream);
 
-hls.attachMedia(
-video
-);
-
+hls.attachMedia(video);
 
 hls.on(
 Hls.Events.MANIFEST_PARSED,
@@ -386,8 +379,7 @@ quality:{
 
 default:0,
 
-options:
-qualities,
+options:qualities,
 
 forced:true,
 
@@ -399,7 +391,6 @@ quality===0
 ){
 
 hls.currentLevel=-1;
-
 return;
 
 }
@@ -453,7 +444,7 @@ country
 );
 
 
-// INDIA
+// ONLY INDIA BLOCKED
 
 if(country==="IN"){
 
@@ -485,7 +476,9 @@ Your location is India
 </h2>
 
 <p style="color:#aaa">
+
 Use Indian Users Button
+
 </p>
 
 <a
@@ -517,9 +510,11 @@ return;
 }
 
 
+// everything else = player
+
 startWorldPlayer();
 
-},2000);
+},1500);
 
 </script>
 
