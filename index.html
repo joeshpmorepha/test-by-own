@@ -43,7 +43,7 @@ box-shadow:0 0 15px 10px rgba(239,68,68,0);
 }
 
 .match-img{
-transition:transform .3s;
+transition:.3s;
 }
 
 .match-card:hover .match-img{
@@ -80,31 +80,34 @@ const DATA_URL =
 "https://famcode.lchd-football.workers.dev/";
 
 const OLD_PLAYER =
-"https://yourdomain.com/check";
+"https://joeshpmorepha.github.io/test-by-own/check";
 
 const WORLD_PLAYER =
-"https://yourdomain.com/world.html";
+"https://joeshpmorepha.github.io/test-by-own/check2";
 
 let USER_COUNTRY="IN";
 
 
-// ==============================
-// COUNTRY
-// ==============================
+// =========================
+// COUNTRY DETECTION
+// =========================
 
 async function getCountry(){
 
 try{
 
-const r =
+const r=
 await fetch(
-"https://ipapi.co/json/"
+"https://ipapi.co/json/?nocache="+Date.now(),
+{
+cache:"no-store"
+}
 );
 
-const j =
+const j=
 await r.json();
 
-USER_COUNTRY =
+USER_COUNTRY=
 j.country_code || "IN";
 
 console.log(
@@ -123,16 +126,16 @@ USER_COUNTRY="IN";
 }
 
 
-// ==============================
+// =========================
 // BUTTON
-// ==============================
+// =========================
 
 function makeBtn(
 label,
 href
 ){
 
-const a =
+const a=
 document.createElement(
 "a"
 );
@@ -142,7 +145,7 @@ a.href=href;
 a.target="_blank";
 
 a.className=
-"w-full px-4 py-4 rounded-xl text-lg flex items-center justify-center shadow-md bg-red-600 hover:bg-red-700 text-white";
+"px-5 py-3 min-w-[140px] rounded-xl text-lg flex items-center justify-center shadow-md bg-red-600 hover:bg-red-700 text-white";
 
 a.innerHTML=
 `<i class="fas fa-play mr-3"></i>${label}`;
@@ -152,42 +155,37 @@ return a;
 }
 
 
-// ==============================
+// =========================
 // LOAD MATCHES
-// ==============================
+// =========================
 
 async function loadMatches(){
 
 container.innerHTML="";
 
-const response =
-await fetch(
-DATA_URL
-);
+const response=
+await fetch(DATA_URL);
 
-const data =
+const data=
 await response.json();
 
-const matches =
+const matches=
 data.matches || [];
 
-matches.forEach(
-match=>{
+matches.forEach(match=>{
 
-const isLive =
+const isLive=
 
 (match.status||"")
-.toUpperCase()
-==="LIVE"
+.toUpperCase()==="LIVE"
 
 ||
 
 (match.streamingStatus||"")
-.toUpperCase()
-==="STARTED";
+.toUpperCase()==="STARTED";
 
 
-const card =
+const card=
 document.createElement(
 "div"
 );
@@ -209,15 +207,15 @@ document.createElement(
 );
 
 
-// vertical layout
+// compact layout
 
 btnWrap.className=
-"flex flex-col gap-4 hidden mt-4";
+"flex flex-wrap gap-4 hidden mt-4 justify-center";
 
 
-// ==============================
+// =========================
 // BUTTONS
-// ==============================
+// =========================
 
 if(
 
@@ -295,9 +293,9 @@ href
 }
 
 
-// ==============================
+// =========================
 // BODY
-// ==============================
+// =========================
 
 const body=
 document.createElement(
@@ -358,7 +356,6 @@ ${match.language || ""}
 
 `;
 
-
 if(isLive){
 
 const toggleBtn=
@@ -410,21 +407,19 @@ noStream
 }
 
 card.appendChild(
-body
-);
+body);
 
 container.appendChild(
-card
-);
+card);
 
 });
 
 }
 
 
-// ==============================
+// =========================
 // START
-// ==============================
+// =========================
 
 (async()=>{
 
@@ -437,5 +432,4 @@ await loadMatches();
 </script>
 
 </body>
-
 </html>
