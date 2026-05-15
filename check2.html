@@ -2,8 +2,10 @@
 <html lang="en">
 
 <head>
+
 <meta charset="UTF-8">
-<title>Worldwide Player</title>
+
+<title> Player</title>
 
 <meta
 name="viewport"
@@ -52,12 +54,12 @@ left:50%;
 transform:translate(-50%,-50%);
 text-align:center;
 color:white;
-z-index:9999;
+z-index:999;
 }
 
 .loader{
-width:44px;
-height:44px;
+width:45px;
+height:45px;
 border:4px solid #333;
 border-top:4px solid red;
 border-radius:50%;
@@ -75,13 +77,14 @@ transform:rotate(360deg);
 .small{
 font-size:13px;
 color:#aaa;
-margin-top:8px;
 }
 
 </style>
+
 </head>
 
 <body>
+
 
 <div
 id="loading"
@@ -100,6 +103,7 @@ Preparing player
 </div>
 
 
+
 <div id="playerWrap">
 
 <video
@@ -115,7 +119,9 @@ playsinline>
 
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.1.4/dist/hls.min.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/plyr@3.6.12/dist/plyr.min.js"></script>
+
 
 <script>
 
@@ -138,37 +144,310 @@ document.getElementById(
 );
 
 
-// LOCATION
+// COUNTRY DETECT
 
-setTimeout(()=>{
+async function detectCountry(){
 
-fetch(
-"https://ipwho.is/"
+try{
+
+const r=
+await fetch(
+"https://ipwho.is/?nocache="+Date.now(),
+{
+cache:"no-store"
+}
+);
+
+const data=
+await r.json();
+
+console.log(data);
+
+return(
+data.country_code||
+""
+).toUpperCase();
+
+}
+
+catch(e){
+
+console.log(e);
+
+// fallback
+
+return "UNKNOWN";
+
+}
+
+}
+
+
+// START PLAYER
+
+async function startWorldPlayer(){
+
+const matchId=
+id.split("_")[0];
+
+const res=
+await fetch(
+"https://famcode.lchd-football.workers.dev/"
+);
+
+const json=
+await res.json();
+
+const match=
+json.matches.find(
+m=>
+String(
+m.match_id
+)
+===matchId
+);
+
+if(!match){
+
+loading.innerHTML=
+"Match not found";
+
+return;
+
+}
+
+const auto=
+match?.auto_streams?.[0]?.auto;
+
+if(!auto){
+
+loading.innerHTML=
+"No stream";
+
+return;
+
+}
+
+const found=
+
+auto.match(
+/https:\/\/[^\n]+?(240|360|480|540|720|1080)p\.m3u8[^\n]*/i
+);
+
+if(!found){
+
+loading.innerHTML=
+"Stream unavailable";
+
+return;
+
+}
+
+
+let stream=
+found[0].trim();
+
+
+// quality -> index
+
+stream=
+stream.replace(
+/(240|360|480|540|720|1080)p\.m3u8/i,
+"index.m3u8"
+);
+
+
+// proxy
+
+stream=
+stream.replace(
+/https:\/\/[^/]+\/mumbai/i,
+PROXY_URL+"/mumbai"
+);
+
+console.log(stream);
+
+
+loading.style.display=
+"none";
+
+document
+.getElementById(
+"playerWrap"
+)
+.style.display=
+"block";
+
+
+// APPLE
+
+const isAppleSafari=
+
+/iPad|iPhone|iPod|Macintosh/.test(
+navigator.userAgent
 )
 
-.then(
-r=>r.json()
+&&
+
+/Safari/.test(
+navigator.userAgent
 )
 
-.then(
-async geo=>{
+&&
+
+!/Chrome|CriOS|Edg/.test(
+navigator.userAgent
+);
+
+
+if(
+isAppleSafari &&
+video.canPlayType(
+'application/vnd.apple.mpegurl'
+)
+){
+
+video.src=
+stream;
+
+new Plyr(video);
+
+return;
+
+}
+
+
+// HLS
+
+if(Hls.isSupported()){
+
+const hls=
+new Hls({
+maxMaxBufferLength:100
+});
+
+hls.loadSource(
+stream
+);
+
+hls.attachMedia(
+video
+);
+
+
+hls.on(
+Hls.Events.MANIFEST_PARSED,
+()=>{
+
+const qualities=[
+
+...new Set(
+
+hls.levels
+.map(
+l=>l.height
+)
+.filter(Boolean)
+
+)
+
+]
+
+.sort(
+(a,b)=>b-a
+);
+
+qualities.unshift(0);
+
+
+new Plyr(
+video,
+{
+
+controls:[
+'play-large',
+'play',
+'mute',
+'volume',
+'settings',
+'fullscreen'
+],
+
+settings:[
+'quality'
+],
+
+quality:{
+
+default:0,
+
+options:
+qualities,
+
+forced:true,
+
+onChange:
+quality=>{
+
+if(
+quality===0
+){
+
+hls.currentLevel=-1;
+return;
+
+}
+
+hls.levels.forEach(
+(level,index)=>{
+
+if(
+level.height===quality
+){
+
+hls.currentLevel=index;
+
+}
+
+});
+
+}
+
+},
+
+i18n:{
+qualityLabel:{
+0:"Auto"
+}
+}
+
+}
+
+);
+
+});
+
+}
+
+}
+
+
+setTimeout(
+async()=>{
 
 const country=
-(
-geo.country_code||
-""
-)
-.toUpperCase();
+await detectCountry();
 
 console.log(
-"Country:",
 country
 );
 
 
 // INDIA
 
-if(country==="IN"){
+if(
+country==="IN"
+){
 
 document.body.innerHTML=`
 
@@ -229,254 +508,7 @@ return;
 }
 
 
-// GET STREAM
-
-const matchId=
-id.split("_")[0];
-
-const res=
-await fetch(
-"https://famcode.lchd-football.workers.dev/"
-);
-
-const json=
-await res.json();
-
-const match=
-json.matches.find(
-m=>
-String(m.match_id)
-===matchId
-);
-
-if(!match){
-
-loading.innerHTML=
-"Match not found";
-
-return;
-
-}
-
-const auto=
-match?.auto_streams?.[0]?.auto;
-
-if(!auto){
-
-loading.innerHTML=
-"No stream";
-
-return;
-
-}
-
-
-// FIND QUALITY URL
-
-const found=
-auto.match(
-/https:\/\/[^\n]+?(240|360|480|540|720|1080)p\.m3u8[^\n]*/i
-);
-
-if(!found){
-
-loading.innerHTML=
-"Stream unavailable";
-
-return;
-
-}
-
-let stream=
-found[0].trim();
-
-
-// QUALITY -> INDEX
-
-stream=
-stream.replace(
-/(240|360|480|540|720|1080)p\.m3u8/i,
-"index.m3u8"
-);
-
-
-// CDN -> PROXY
-
-stream=
-stream.replace(
-/https:\/\/[^/]+\/mumbai/i,
-PROXY_URL+"/mumbai"
-);
-
-console.log(stream);
-
-
-loading.style.display=
-"none";
-
-document
-.getElementById(
-"playerWrap"
-)
-.style.display=
-"block";
-
-
-// APPLE SAFARI
-
-const isAppleSafari=
-
-/iPad|iPhone|iPod|Macintosh/.test(
-navigator.userAgent
-)
-
-&&
-
-/Safari/.test(
-navigator.userAgent
-)
-
-&&
-
-!/Chrome|CriOS|Edg/.test(
-navigator.userAgent
-);
-
-
-if(
-isAppleSafari &&
-video.canPlayType(
-'application/vnd.apple.mpegurl'
-)
-){
-
-video.src=stream;
-
-new Plyr(video);
-
-return;
-
-}
-
-
-// HLS + PLYR
-
-if(Hls.isSupported()){
-
-const hls=
-new Hls({
-maxMaxBufferLength:100
-});
-
-hls.loadSource(stream);
-
-hls.attachMedia(video);
-
-hls.on(
-Hls.Events.MANIFEST_PARSED,
-()=>{
-
-const availableQualities=[
-
-...new Set(
-
-hls.levels
-.map(level=>level.height)
-.filter(Boolean)
-
-)
-
-]
-
-.sort(
-(a,b)=>b-a
-);
-
-
-// AUTO
-
-availableQualities.unshift(0);
-
-
-new Plyr(
-video,
-{
-
-controls:[
-'play-large',
-'play',
-'mute',
-'volume',
-'settings',
-'fullscreen'
-],
-
-settings:[
-'quality'
-],
-
-quality:{
-
-default:0,
-
-options:
-availableQualities,
-
-forced:true,
-
-onChange:
-quality=>{
-
-if(
-quality===0
-){
-
-hls.currentLevel=-1;
-return;
-
-}
-
-hls.levels.forEach(
-(level,index)=>{
-
-if(
-level.height===quality
-){
-
-hls.currentLevel=index;
-
-}
-
-});
-
-}
-
-},
-
-i18n:{
-qualityLabel:{
-0:"Auto"
-}
-}
-
-}
-
-);
-
-});
-
-}
-
-})
-
-.catch(err=>{
-
-console.log(err);
-
-loading.innerHTML=
-"Unable to detect location";
-
-});
+startWorldPlayer();
 
 },2000);
 
