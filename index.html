@@ -4,7 +4,7 @@
 <head>
 
 <meta charset="UTF-8"/>
-<title> Live</title>
+<title>Fancode Live</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta name="referrer" content="no-referrer">
@@ -41,6 +41,14 @@ box-shadow:0 0 0 0 rgba(239,68,68,.7);
 50%{
 box-shadow:0 0 15px 10px rgba(239,68,68,0);
 }
+}
+
+.match-img{
+transition:transform .3s;
+}
+
+.match-card:hover .match-img{
+transform:scale(1.03);
 }
 
 </style>
@@ -159,7 +167,7 @@ const card =
 document.createElement("div");
 
 card.className =
-"rounded-2xl overflow-hidden shadow-xl match-card border border-gray-800";
+`rounded-2xl overflow-hidden shadow-xl match-card border border-gray-800 ${isLive?"ring-2 ring-red-600":""}`;
 
 const img =
 match.image ||
@@ -229,6 +237,10 @@ makeBtn("Watch Now",href)
 
 }
 
+// ====================================
+// BODY
+// ====================================
+
 const body =
 document.createElement("div");
 
@@ -239,7 +251,7 @@ body.innerHTML = `
 <div class="relative">
 
 <img src="${img}"
-class="w-full h-60 object-cover rounded-xl">
+class="w-full h-60 object-cover rounded-xl match-img">
 
 ${isLive
 ? `<span class="absolute top-3 left-3 bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-full live-badge">LIVE</span>`
@@ -260,6 +272,10 @@ ${match.startTime || ""}
 </p>
 `;
 
+// ====================================
+// LIVE BUTTON
+// ====================================
+
 if(isLive){
 
 const toggleBtn =
@@ -278,6 +294,25 @@ btnWrap.classList.toggle("hidden");
 body.appendChild(toggleBtn);
 
 body.appendChild(btnWrap);
+
+}
+
+// ====================================
+// NO STREAM
+// ====================================
+
+else{
+
+const noStream =
+document.createElement("div");
+
+noStream.className =
+"w-full bg-gray-800 text-gray-400 py-2 px-4 rounded-lg mt-4 text-center";
+
+noStream.innerHTML =
+`<i class="fas fa-clock mr-2"></i>No stream available yet`;
+
+body.appendChild(noStream);
 
 }
 
