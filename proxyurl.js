@@ -1,2 +1,2 @@
 const PROXY_URL =
-"https://fncd.kuvuslov.cymru/";
+"https://fncd.kuvuslov.cymru";
