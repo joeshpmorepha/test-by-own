@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 <meta charset="UTF-8">
 <title>Fancode Live</title>
@@ -32,23 +31,12 @@ animation:pulse 1.5s infinite;
 }
 
 @keyframes pulse{
-
-0%{
-box-shadow:0 0 0 0 rgba(255,0,0,.7);
-}
-
-70%{
-box-shadow:0 0 0 10px rgba(255,0,0,0);
-}
-
-100%{
-box-shadow:0 0 0 0 rgba(255,0,0,0);
-}
-
+0%{box-shadow:0 0 0 0 rgba(255,0,0,.7);}
+70%{box-shadow:0 0 0 10px rgba(255,0,0,0);}
+100%{box-shadow:0 0 0 0 rgba(255,0,0,0);}
 }
 
 </style>
-
 </head>
 
 <body>
@@ -61,130 +49,27 @@ Fancode Live
 
 <div
 id="matches-container"
-class="
-grid
-grid-cols-1
-sm:grid-cols-2
-lg:grid-cols-3
-gap-8
-">
+class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
 </div>
 
 </div>
-
 
 <script>
 
-const container =
+const container=
 document.getElementById(
 "matches-container"
 );
 
-const DATA_URL =
+const DATA_URL=
 "https://famcode.lchd-football.workers.dev/";
 
-const OLD_PLAYER =
-"https://yourdomain.com/check";
+const OLD_PLAYER=
+"https://joeshpmorepha.github.io/test-by-own/check";
 
-const WORLD_PLAYER =
-"https://yourdomain.com/world.html";
+const WORLD_PLAYER=
+"https://joeshpmorepha.github.io/test-by-own/check2";
 
-let INDIA_MODE=false;
-
-
-// =====================
-// COUNTRY CHECK
-// =====================
-
-function detectIndiaMode(){
-
-fetch(
-'https://ipapi.co/json/'
-)
-
-.then(response=>{
-
-if(!response.ok){
-
-throw new Error(
-`geo ${response.status}`
-);
-
-}
-
-return response.json();
-
-})
-
-.then(data=>{
-
-console.log(
-'📍 GEO:',
-data
-);
-
-const country=
-
-(
-data.country_code ||
-
-data.country ||
-
-""
-)
-
-.toUpperCase();
-
-console.log(
-"country:",
-country
-);
-
-
-if(
-country==="IN"
-){
-
-INDIA_MODE=true;
-
-}
-
-else{
-
-INDIA_MODE=false;
-
-}
-
-console.log(
-"INDIA_MODE:",
-INDIA_MODE
-);
-
-loadMatches();
-
-})
-
-.catch(error=>{
-
-console.warn(
-'geo failed:',
-error
-);
-
-// default WORLD
-
-INDIA_MODE=false;
-
-loadMatches();
-
-});
-
-}
-
-
-// =====================
-// BUTTON
-// =====================
 
 function makeBtn(
 label,
@@ -212,7 +97,7 @@ shadow-md
 flex
 items-center
 justify-center
-min-w-[120px]
+text-sm
 `;
 
 a.innerHTML=
@@ -226,19 +111,10 @@ return a;
 }
 
 
-
-// =====================
-// LOAD MATCHES
-// =====================
-
 async function loadMatches(){
 
-container.innerHTML="";
-
 const res=
-await fetch(
-DATA_URL
-);
+await fetch(DATA_URL);
 
 const data=
 await res.json();
@@ -277,11 +153,6 @@ border-gray-800
 `;
 
 
-const img=
-match.image||
-"https://www.fancode.com/skillup-uploads/cms-media/Cricket_Fallback_Old_match-card.jpg";
-
-
 const body=
 document.createElement(
 "div"
@@ -291,71 +162,31 @@ body.className=
 "p-5";
 
 
-body.innerHTML=
-`
-
-<div class="relative">
+body.innerHTML=`
 
 <img
-src="${img}"
+src="${match.image}"
 class="
 w-full
-h-60
-rounded-xl
+h-56
 object-cover
+rounded-xl
 ">
-
-${isLive?
-
-`
-<span
-class="
-absolute
-top-3
-left-3
-bg-red-600
-px-3
-py-1
-rounded-full
-text-xs
-live-badge
-">
-
-LIVE
-
-</span>
-
-`
-:""}
-
-</div>
-
 
 <h2 class="text-xl font-semibold mt-4">
-
-${match.title||"Match"}
-
+${match.title}
 </h2>
 
-
-<p class="text-gray-400 text-sm mt-1">
-
+<p class="text-gray-400 text-sm">
 ${match.tournament||""}
-
 </p>
 
-
 <p class="text-gray-500 text-sm mt-2">
-
 ${match.startTime||""}
-
 </p>
 
-
 <p class="text-gray-500 text-sm mt-2">
-
 ${match.language||""}
-
 </p>
 
 `;
@@ -363,65 +194,76 @@ ${match.language||""}
 
 if(isLive){
 
-const toggle=
+const qualityWrap=
+document.createElement(
+"div"
+);
+
+qualityWrap.className=
+`
+hidden
+flex
+flex-wrap
+gap-3
+mt-4
+justify-center
+`;
+
+const indiaBtn=
 document.createElement(
 "button"
 );
 
-toggle.className=
+indiaBtn.className=
 `
 w-full
-bg-gradient-to-r
-from-orange-600
-to-red-600
-text-white
+bg-red-600
 py-2
 rounded-lg
 mt-4
 `;
 
-toggle.innerHTML=
-`
-<i class="fas fa-tv mr-2"></i>
-Watch Now
-`;
+indiaBtn.innerText=
+"Watch Now - Indian Users";
 
 
-const btnWrap=
-document.createElement(
-"div"
+indiaBtn.onclick=()=>{
+
+qualityWrap.classList.toggle(
+"hidden"
 );
 
-btnWrap.className=
-`
-hidden
-flex
-flex-wrap
-justify-center
-gap-3
-mt-4
-`;
+};
 
 
-// INDIA
+const worldBtn=
+makeBtn(
+"Watch Now - Worldwide Users",
+`${WORLD_PLAYER}?id=${match.match_id}_${match.language}`
+);
 
-if(INDIA_MODE){
+worldBtn.style.marginTop=
+"10px";
+
+
 
 const master=
-match.auto_streams?.[0]?.auto || "";
+match.auto_streams?.[0]?.auto||"";
 
-const qualities=[
+const qualities=
+[
 ...master.matchAll(
 /(\d+)p\.m3u8/g
 )
 ];
+
 
 qualities.forEach(
 q=>{
 
 const quality=q[1];
 
-btnWrap.appendChild(
+qualityWrap.appendChild(
 
 makeBtn(
 
@@ -435,39 +277,18 @@ quality+"p",
 
 });
 
-}
 
-
-// WORLD
-
-else{
-
-btnWrap.appendChild(
-
-makeBtn(
-
-"Watch Now",
-
-`${WORLD_PLAYER}?id=${match.match_id}_${match.language}`
-
-)
-
+body.appendChild(
+indiaBtn
 );
 
-}
-
-
-toggle.onclick=()=>{
-
-btnWrap.classList.toggle(
-"hidden"
+body.appendChild(
+qualityWrap
 );
 
-};
-
-body.appendChild(toggle);
-
-body.appendChild(btnWrap);
+body.appendChild(
+worldBtn
+);
 
 }
 
@@ -475,8 +296,7 @@ else{
 
 body.innerHTML+=`
 
-<div
-class="
+<div class="
 w-full
 bg-gray-800
 text-gray-400
@@ -486,8 +306,6 @@ py-2
 text-center
 ">
 
-<i class="fas fa-clock mr-2"></i>
-
 No stream available yet
 
 </div>
@@ -496,18 +314,19 @@ No stream available yet
 
 }
 
-card.appendChild(body);
+card.appendChild(
+body
+);
 
-container.appendChild(card);
+container.appendChild(
+card
+);
 
 });
 
 }
 
-
-// START
-
-detectIndiaMode();
+loadMatches();
 
 </script>
 
