@@ -3,8 +3,7 @@
 
 <head>
 <meta charset="UTF-8">
-
-<title>FamcodePlayer</title>
+<title>Worldwide Player</title>
 
 <meta
 name="viewport"
@@ -116,7 +115,6 @@ playsinline>
 
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.1.4/dist/hls.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/plyr@3.6.12/dist/plyr.min.js"></script>
 
 <script>
@@ -156,12 +154,10 @@ r=>r.json()
 async geo=>{
 
 const country=
-
 (
 geo.country_code||
 ""
 )
-
 .toUpperCase();
 
 console.log(
@@ -201,11 +197,8 @@ text-align:center;
 Your location is India
 </h2>
 
-<p style="
-color:#aaa">
-
+<p style="color:#aaa">
 Use Indian Users Button
-
 </p>
 
 <a
@@ -229,7 +222,6 @@ Watch Now - Indian Users
 </div>
 
 </div>
-
 `;
 
 return;
@@ -237,11 +229,10 @@ return;
 }
 
 
-// JSON
+// GET STREAM
 
 const matchId=
 id.split("_")[0];
-
 
 const res=
 await fetch(
@@ -251,16 +242,12 @@ await fetch(
 const json=
 await res.json();
 
-
 const match=
 json.matches.find(
 m=>
-String(
-m.match_id
-)
+String(m.match_id)
 ===matchId
 );
-
 
 if(!match){
 
@@ -271,15 +258,13 @@ return;
 
 }
 
-
 const auto=
 match?.auto_streams?.[0]?.auto;
-
 
 if(!auto){
 
 loading.innerHTML=
-"No Stream";
+"No stream";
 
 return;
 
@@ -289,11 +274,9 @@ return;
 // FIND QUALITY URL
 
 const found=
-
 auto.match(
 /https:\/\/[^\n]+?(240|360|480|540|720|1080)p\.m3u8[^\n]*/i
 );
-
 
 if(!found){
 
@@ -303,7 +286,6 @@ loading.innerHTML=
 return;
 
 }
-
 
 let stream=
 found[0].trim();
@@ -326,10 +308,7 @@ stream.replace(
 PROXY_URL+"/mumbai"
 );
 
-
-console.log(
-stream
-);
+console.log(stream);
 
 
 loading.style.display=
@@ -343,16 +322,35 @@ document
 "block";
 
 
-// APPLE
+// APPLE SAFARI
+
+const isAppleSafari=
+
+/iPad|iPhone|iPod|Macintosh/.test(
+navigator.userAgent
+)
+
+&&
+
+/Safari/.test(
+navigator.userAgent
+)
+
+&&
+
+!/Chrome|CriOS|Edg/.test(
+navigator.userAgent
+);
+
 
 if(
+isAppleSafari &&
 video.canPlayType(
 'application/vnd.apple.mpegurl'
 )
 ){
 
-video.src=
-stream;
+video.src=stream;
 
 new Plyr(video);
 
@@ -361,34 +359,44 @@ return;
 }
 
 
-// HLS
+// HLS + PLYR
 
-if(
-Hls.isSupported()
-){
+if(Hls.isSupported()){
 
 const hls=
 new Hls({
 maxMaxBufferLength:100
 });
 
-hls.loadSource(
-stream
-);
+hls.loadSource(stream);
 
-hls.attachMedia(
-video
-);
+hls.attachMedia(video);
 
 hls.on(
 Hls.Events.MANIFEST_PARSED,
 ()=>{
 
-const qualities=
+const availableQualities=[
 
-hls.levels.map(
-l=>l.height
+...new Set(
+
+hls.levels
+.map(level=>level.height)
+.filter(Boolean)
+
+)
+
+]
+
+.sort(
+(a,b)=>b-a
 );
+
+
+// AUTO
+
+availableQualities.unshift(0);
+
 
 new Plyr(
 video,
@@ -403,18 +411,30 @@ controls:[
 'fullscreen'
 ],
 
+settings:[
+'quality'
+],
+
 quality:{
 
-default:
-qualities[0],
+default:0,
 
 options:
-qualities,
+availableQualities,
 
 forced:true,
 
 onChange:
 quality=>{
+
+if(
+quality===0
+){
+
+hls.currentLevel=-1;
+return;
+
+}
 
 hls.levels.forEach(
 (level,index)=>{
@@ -431,6 +451,12 @@ hls.currentLevel=index;
 
 }
 
+},
+
+i18n:{
+qualityLabel:{
+0:"Auto"
+}
 }
 
 }
