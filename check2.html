@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
 <meta charset="UTF-8">
@@ -8,7 +9,11 @@
 name="viewport"
 content="width=device-width,initial-scale=1">
 
-<title>Worldwide Player</title>
+<title>
+Worldwide Player
+</title>
+
+<script src="proxyurl.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
@@ -17,19 +22,27 @@ content="width=device-width,initial-scale=1">
 body{
 margin:0;
 background:#000;
-color:#fff;
 font-family:sans-serif;
+color:white;
+overflow:hidden;
 }
 
 video{
 width:100%;
 height:100vh;
+background:black;
+display:none;
 }
 
 #msg{
-padding:20px;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+font-size:24px;
+color:white;
 text-align:center;
-font-size:20px;
+z-index:999;
 }
 
 </style>
@@ -70,8 +83,16 @@ document.getElementById(
 );
 
 
+// 2 second delay
+
+setTimeout(()=>{
+
+
 fetch(
-"https://ipapi.co/json/"
+"https://ipapi.co/json/?t="+Date.now(),
+{
+cache:"no-store"
+}
 )
 
 .then(r=>r.json())
@@ -85,24 +106,90 @@ geo.country_code||
 )
 .toUpperCase();
 
+console.log(
+"Country:",
+country
+);
 
-if(
-country==="IN"
-){
 
-msg.innerHTML=
-`
-Your location is India.<br><br>
+// INDIA POPUP
 
-Use:
+if(country==="IN"){
+
+document.body.innerHTML=`
+
+<div style="
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.85);
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:9999;
+">
+
+<div style="
+width:90%;
+max-width:350px;
+background:#171717;
+padding:25px;
+border-radius:18px;
+text-align:center;
+box-shadow:0 0 20px rgba(255,0,0,.3);
+">
+
+<h2 style="
+font-size:24px;
+margin-bottom:15px;
+">
+
+Your location is India
+
+</h2>
+
+<p style="
+color:#aaa;
+margin-bottom:25px;
+">
+
+Use Indian stream player
+
+</p>
+
+<a
+
+href="javascript:history.back()"
+
+style="
+display:block;
+background:#ff0000;
+padding:14px;
+border-radius:12px;
+color:white;
+font-size:18px;
+text-decoration:none;
+font-weight:bold;
+">
 
 Watch Now - Indian Users
+
+</a>
+
+</div>
+
+</div>
+
 `;
 
 return;
 
 }
 
+
+// WORLD PLAYER
 
 const matchId=
 id.split("_")[0];
@@ -131,18 +218,24 @@ m.match_id
 
 
 let url=
-match.auto_streams[0]
-.auto.match(
+
+match
+.auto_streams?.[0]
+?.auto
+.match(
 /https.*1080p\.m3u8/
 )?.[0];
 
 
 url=
+
 url
+
 .replace(
 /https:\/\/.*?\/mumbai\//,
-"https://proxy.camily.in/mumbai/"
+PROXY_URL+"/mumbai/"
 )
+
 .replace(
 "1080p.m3u8",
 "index.m3u8"
@@ -151,6 +244,9 @@ url
 
 msg.style.display=
 "none";
+
+video.style.display=
+"block";
 
 
 if(Hls.isSupported()){
@@ -166,13 +262,24 @@ hls.attachMedia(
 video
 );
 
-}else{
+}
+
+else{
 
 video.src=url;
 
 }
 
+})
+
+.catch(()=>{
+
+msg.innerHTML=
+"Unable to detect location";
+
 });
+
+},2000);
 
 </script>
 
