@@ -5,7 +5,7 @@
 
 <meta charset="UTF-8">
 
-<title>Player</title>
+<title>Worldwide Player</title>
 
 <meta
 name="viewport"
@@ -15,7 +15,8 @@ content="width=device-width,initial-scale=1">
 name="referrer"
 content="no-referrer"/>
 
-<script src="//content.jwplatform.com/libraries/SAHhwvZq.js"></script>
+<link rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/plyr@3.6.12/dist/plyr.css"/>
 
 <script src="proxyurl.js"></script>
 
@@ -23,13 +24,14 @@ content="no-referrer"/>
 
 html,body{
 margin:0;
+padding:0;
 height:100%;
 background:#000;
 overflow:hidden;
 font-family:Arial,sans-serif;
 }
 
-#player{
+#playerWrap{
 width:100%;
 height:100%;
 display:none;
@@ -41,6 +43,10 @@ height:100%;
 background:#000;
 }
 
+.plyr{
+height:100%;
+}
+
 .loading{
 position:fixed;
 top:50%;
@@ -48,18 +54,17 @@ left:50%;
 transform:translate(-50%,-50%);
 text-align:center;
 color:white;
-z-index:9999;
 }
 
 .loader{
-width:45px;
-height:45px;
+width:44px;
+height:44px;
 border:4px solid #333;
 border-top:4px solid red;
 border-radius:50%;
 margin:auto;
 margin-bottom:15px;
-animation:spin .9s linear infinite;
+animation:spin .8s linear infinite;
 }
 
 @keyframes spin{
@@ -80,6 +85,7 @@ margin-top:8px;
 
 <body>
 
+
 <div
 id="loading"
 class="loading">
@@ -97,17 +103,24 @@ Preparing player
 </div>
 
 
-<div id="player">
+
+<div id="playerWrap">
 
 <video
-id="video"
-controls
+id="player"
 autoplay
+muted
+controls
+crossorigin
 playsinline>
 </video>
 
 </div>
 
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.1.4/dist/hls.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/plyr@3.6.12/dist/plyr.min.js"></script>
 
 <script>
 
@@ -121,11 +134,16 @@ params.get("id");
 
 const video=
 document.getElementById(
-"video"
+"player"
+);
+
+const loading=
+document.getElementById(
+"loading"
 );
 
 
-// OLD WORKING DETECTION
+// OLD DETECTION
 
 setTimeout(()=>{
 
@@ -146,11 +164,6 @@ geo.country_code||
 ""
 )
 .toUpperCase();
-
-console.log(
-"Country:",
-country
-);
 
 
 // INDIA
@@ -181,17 +194,11 @@ text-align:center;
 ">
 
 <h2>
-
 Your location is India
-
 </h2>
 
-<p style="
-color:#aaa
-">
-
+<p style="color:#aaa">
 Use Indian Users Button
-
 </p>
 
 <a
@@ -215,7 +222,6 @@ Watch Now - Indian Users
 </div>
 
 </div>
-
 `;
 
 return;
@@ -223,7 +229,7 @@ return;
 }
 
 
-// WORLD
+// JSON
 
 const matchId=
 id.split("_")[0];
@@ -241,58 +247,38 @@ await res.json();
 const match=
 json.matches.find(
 m=>
-
 String(
 m.match_id
 )
-
 ===matchId
 );
 
 
-if(!match){
-
-document.getElementById(
-"loading"
-).innerHTML=
-"Match not found";
-
-return;
-
-}
-
-
 const auto=
-
-match
-?.auto_streams?.[0]
-?.auto;
-
+match?.auto_streams?.[0]?.auto;
 
 if(!auto){
 
-document.getElementById(
-"loading"
-).innerHTML=
-"No stream";
+loading.innerHTML=
+"No Stream";
 
 return;
 
 }
 
+
+// FIND STREAM
 
 const found=
 
 auto.match(
-/https.*(240|360|480|540|720|1080)p\.m3u8[^\n]*/i
+/https:\/\/[^\n]+?(240|360|480|540|720|1080)p\.m3u8[^\n]*/i
 );
 
 
 if(!found){
 
-document.getElementById(
-"loading"
-).innerHTML=
+loading.innerHTML=
 "Stream unavailable";
 
 return;
@@ -301,38 +287,33 @@ return;
 
 
 let stream=
-found[0];
+found[0].trim();
 
 
-// PROXY + INDEX
+// INDEX
 
 stream=
-
-stream
-
-.replace(
-/https:\/\/.*?\/mumbai\//,
-PROXY_URL+
-"/mumbai/"
-)
-
-.replace(
-/\/(240|360|480|540|720|1080)p\.m3u8/i,
-"/index.m3u8"
+stream.replace(
+/(240|360|480|540|720|1080)p\.m3u8/i,
+"index.m3u8"
 );
 
 
-document
-.getElementById(
-"loading"
-)
-.style.display=
+// PROXY
+
+stream=
+stream.replace(
+/https:\/\/[^/]+\/mumbai/i,
+PROXY_URL+"/mumbai"
+);
+
+
+loading.style.display=
 "none";
 
-
 document
 .getElementById(
-"player"
+"playerWrap"
 )
 .style.display=
 "block";
@@ -340,74 +321,108 @@ document
 
 // APPLE
 
-const isApple=
-
-/iPad|iPhone|iPod|Macintosh/i
-.test(
-navigator.userAgent
-)
-
-&&
-
+if(
 video.canPlayType(
-"application/vnd.apple.mpegurl"
-);
-
-
-// APPLE NATIVE
-
-if(isApple){
+'application/vnd.apple.mpegurl'
+)
+){
 
 video.src=
 stream;
 
-video.play()
-.catch(()=>{});
+new Plyr(video);
+
+return;
 
 }
 
 
-// OTHERS = JW
+// HLS
 
-else{
+if(Hls.isSupported()){
 
-jwplayer(
-"player"
-)
+const hls=
+new Hls({
+maxMaxBufferLength:100
+});
 
-.setup({
+hls.loadSource(
+stream
+);
 
-file:stream,
+hls.attachMedia(
+video
+);
 
-type:"hls",
 
-width:"100%",
+hls.on(
+Hls.Events.MANIFEST_PARSED,
+()=>{
 
-height:"100%",
+const availableQualities=
 
-autostart:true,
+hls.levels.map(
+level=>level.height
+);
 
-mute:false,
+new Plyr(
+video,
+{
 
-stretching:"uniform",
+controls:[
 
-primary:"html5"
+'play-large',
+'play',
+'mute',
+'volume',
+'settings',
+'fullscreen'
+
+],
+
+quality:{
+
+default:
+availableQualities[0],
+
+options:
+availableQualities,
+
+forced:true,
+
+onChange:
+quality=>{
+
+hls.levels.forEach(
+(level,index)=>{
+
+if(
+level.height===quality
+){
+
+hls.currentLevel=index;
+
+}
 
 });
 
 }
 
+}
+
+}
+
+);
+
+});
+
+}
 
 })
 
 .catch(()=>{
 
-document
-.getElementById(
-"loading"
-)
-.innerHTML=
-
+loading.innerHTML=
 "Unable to detect location";
 
 });
