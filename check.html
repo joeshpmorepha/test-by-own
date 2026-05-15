@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Ferherne</title>
+<title>Famcode - Matches</title>
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.6.0/shaka-player.ui.min.js"></script>
@@ -51,10 +51,11 @@ const json = await data.json();
 const match = json.matches.find(m => String(m.match_id) === matchId);
 if(!match) return null;
 const master = match.auto_streams[0].auto;
-const regex = new RegExp(`https.*${quality}p\\.m3u8[^\\n]*`);
+const regex = new RegExp(https.*${quality}p\\.m3u8[^\\n]*);
 const found = master.match(regex);
 return found ? found[0] : null;
 }
+
 let player;
 const video = document.getElementById('video');
 async function initializePlayer(){
@@ -64,7 +65,9 @@ await player.attach(video);
 const container=document.querySelector('.shaka-video-container');
 const ui=new shaka.ui.Overlay(player,container,video);
 
+
 /* UI CONFIG */
+
 const config={
 addSeekBar:false,
 controlPanelElements:[
@@ -77,18 +80,17 @@ controlPanelElements:[
 'fullscreen'
 ]
 };
-
 ui.configure(config);
 
-/* PLAYER CONFIG */
-player.configure({
 
+/* PLAYER CONFIG */
+
+player.configure({
 streaming:{
 bufferingGoal:10,
 rebufferingGoal:2,
 bufferBehind:30
 },
-
 manifest:{
 retryParameters:{
 timeout:30000,
@@ -100,19 +102,18 @@ fuzzFactor:0.5
 }
 });
 
+
 /* HEADERS */
 player.getNetworkingEngine().registerRequestFilter((type,request)=>{
 request.headers["Referer"]="https://fancode.com/";
 request.headers["User-Agent"]="ReactNativeVideo/9.3.0 (Linux;Android 13) AndroidXMedia3/1.6.1";
 });
-
 video.autoplay=true;
 video.controls=false;
 video.volume=1;
 video.muted=false;
 video.preload='auto';
 console.log("Loading stream:",channelstreamInfo.streamUrl);
-
 
 /* iOS HLS FIX */
 if (video.canPlayType('application/vnd.apple.mpegurl')) {
@@ -131,7 +132,7 @@ console.log("Autoplay success");
 catch(e){
 video.muted=true;
 try{
-  await video.play();
+ await video.play();
 console.log("Autoplay success muted");
 }
 catch(e2){
@@ -139,6 +140,7 @@ console.log("User interaction required");
 }
 }
 };
+
 if(video.readyState>=2){
 await attemptAutoplay();
 }
