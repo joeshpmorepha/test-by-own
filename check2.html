@@ -1,26 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
-<title>Player</title>
-
+<title>Famcode - Matches</title>
 <meta
 name="viewport"
 content="width=device-width,initial-scale=1">
-
 <meta
 name="referrer"
 content="no-referrer"/>
-
 <link rel="stylesheet"
 href="https://cdn.jsdelivr.net/npm/plyr@3.6.12/dist/plyr.css"/>
-
 <script src="proxyurl.js"></script>
-
 <style>
-
 html,body{
 margin:0;
 padding:0;
@@ -80,31 +72,20 @@ margin-top:8px;
 }
 
 </style>
-
 </head>
-
 <body>
-
-
 <div
 id="loading"
 class="loading">
-
 <div class="loader"></div>
-
 <div>
 Checking location...
 </div>
-
 <div class="small">
 Preparing player
 </div>
-
 </div>
-
-
 <div id="playerWrap">
-
 <video
 id="player"
 autoplay
@@ -113,40 +94,21 @@ controls
 crossorigin
 playsinline>
 </video>
-
 </div>
-
-
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.1.4/dist/hls.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/plyr@3.6.12/dist/plyr.min.js"></script>
-
 <script>
-
 const params=
-new URLSearchParams(
-location.search
-);
-
+new URLSearchParams(location.search);
 const id=
 params.get("id");
-
 const video=
-document.getElementById(
-"player"
-);
-
+document.getElementById("player");
 const loading=
-document.getElementById(
-"loading"
-);
-
-
-// COUNTRY
+document.getElementById("loading");
 
 async function detectCountry(){
-
 try{
-
 const r=
 await fetch(
 "https://ip.lchd-football.workers.dev?t="+Date.now(),
@@ -157,40 +119,21 @@ cache:"no-store"
 
 const data=
 await r.json();
-
-console.log(
-"Country:",
-data.country
-);
-
 return(
 data.country||
 "UNKNOWN"
 )
 .trim()
 .toUpperCase();
-
 }
-
 catch(e){
-
-console.log(e);
-
 return "UNKNOWN";
-
 }
-
 }
-
-
-
-// PLAYER
 
 async function startWorldPlayer(){
-
 const matchId=
 id.split("_")[0];
-
 
 const res=
 await fetch(
@@ -200,7 +143,6 @@ await fetch(
 const json=
 await res.json();
 
-
 const match=
 json.matches.find(
 m=>
@@ -208,61 +150,38 @@ String(m.match_id)
 ===matchId
 );
 
-
 if(!match){
-
 loading.innerHTML=
 "Match not found";
-
 return;
-
 }
-
 
 const auto=
 match?.auto_streams?.[0]?.auto;
-
-
 if(!auto){
-
 loading.innerHTML=
 "No stream";
-
 return;
-
 }
-
 
 const found=
 auto.match(
 /https:\/\/[^\n]+?(240|360|480|540|720|1080)p\.m3u8[^\n]*/i
 );
 
-
 if(!found){
-
 loading.innerHTML=
 "Stream unavailable";
-
 return;
-
 }
-
 
 let stream=
 found[0].trim();
-
-
-// quality → index
-
 stream=
 stream.replace(
 /(240|360|480|540|720|1080)p\.m3u8/i,
 "index.m3u8"
 );
-
-
-// proxy
 
 stream=
 stream.replace(
@@ -270,10 +189,8 @@ stream.replace(
 PROXY_URL+"/mumbai"
 );
 
-
 loading.style.display=
 "none";
-
 document
 .getElementById(
 "playerWrap"
@@ -281,94 +198,34 @@ document
 .style.display=
 "block";
 
-
-
-// APPLE
-
-const isAppleSafari=
-
-/iPad|iPhone|iPod|Macintosh/.test(
-navigator.userAgent
-)
-
-&&
-
-/Safari/.test(
-navigator.userAgent
-)
-
-&&
-
-!/Chrome|CriOS|Edg/.test(
-navigator.userAgent
-);
-
-
-if(
-isAppleSafari &&
-video.canPlayType(
-'application/vnd.apple.mpegurl'
-)
-){
-
-video.src=stream;
-
-new Plyr(video);
-
-return;
-
-}
-
-
-
-// HLS
-
 if(Hls.isSupported()){
-
 const hls=
 new Hls({
 maxMaxBufferLength:100
 });
 
-hls.loadSource(
-stream
-);
-
-hls.attachMedia(
-video
-);
-
-
+hls.loadSource(stream);
+hls.attachMedia(video);
 hls.on(
 Hls.Events.MANIFEST_PARSED,
 ()=>{
-
 const qualities=[
-
 ...new Set(
-
 hls.levels
 .map(
 l=>l.height
 )
 .filter(Boolean)
-
 )
-
 ]
-
 .sort(
 (a,b)=>b-a
 );
 
-
 qualities.unshift(0);
-
-
 new Plyr(
 video,
 {
-
 controls:[
 'play-large',
 'play',
@@ -377,146 +234,125 @@ controls:[
 'settings',
 'fullscreen'
 ],
-
 settings:[
 'quality'
 ],
-
 quality:{
-
 default:0,
-
 options:qualities,
-
 forced:true,
-
 onChange:
 quality=>{
-
 if(
 quality===0
 ){
-
 hls.currentLevel=-1;
-
 return;
-
 }
-
 hls.levels.forEach(
 (level,index)=>{
-
 if(
 level.height===quality
 ){
-
 hls.currentLevel=index;
-
 }
-
 });
-
 }
-
 },
-
 i18n:{
 qualityLabel:{
 0:"Auto"
 }
 }
-
 }
-
 );
-
 });
-
 }
-
 }
-
-
-
-// START
 
 setTimeout(
 async()=>{
-
 const country=
 await detectCountry();
-
-
-// INDIA
-
-if(
-country==="IN"
-){
+if(country==="IN"){
 
 document.body.innerHTML=`
-
 <div style="
 position:fixed;
 top:0;
 left:0;
 width:100%;
 height:100%;
-background:rgba(0,0,0,.9);
+background:rgba(0,0,0,.92);
 display:flex;
 justify-content:center;
 align-items:center;
+padding:20px;
+box-sizing:border-box;
 ">
 
 <div style="
-background:#171717;
-padding:25px;
-width:90%;
-max-width:340px;
-border-radius:20px;
+width:92%;
+max-width:360px;
+background:linear-gradient(180deg,#171717,#111);
+padding:28px;
+border-radius:28px;
 text-align:center;
+border:3px solid #ff2020;
+box-shadow:
+0 0 25px rgba(255,0,0,.25);
 ">
 
-<h2>
+<div style="
+font-size:30px;
+margin-bottom:14px;
+">
+🇮🇳
+</div>
+
+<h2 style="
+margin:0;
+font-size:28px;
+color:#ff4d4d;
+font-weight:700;
+">
 Your location is India
 </h2>
-
-<p style="color:#aaa">
-Use Indian Users Button
+<p style="
+color:#bdbdbd;
+font-size:15px;
+line-height:1.5;
+margin-top:14px;
+margin-bottom:28px;
+">
+Worldwide stream unavailable.<br>
+Return to homepage.
 </p>
 
 <a
-href="javascript:history.back()"
-
+href="index.html"
 style="
 display:block;
-margin-top:20px;
-background:red;
-padding:14px;
-border-radius:12px;
-color:white;
+background:#ff0000;
+padding:16px;
+border-radius:16px;
+color:#fff;
+font-size:20px;
+font-weight:700;
 text-decoration:none;
-font-weight:bold;
+box-shadow:
+0 0 15px rgba(255,0,0,.35);
 ">
-
-Watch Now - Indian Users
-
+⬅ Back Home
 </a>
-
 </div>
-
 </div>
 `;
-
 return;
-
 }
-
-
 startWorldPlayer();
-
 },1500);
 
 </script>
-
 </body>
 </html>
