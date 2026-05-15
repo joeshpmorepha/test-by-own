@@ -297,24 +297,129 @@ video.style.display=
 "block";
 
 
-if(Hls.isSupported()){
+if (Hls.isSupported()) {
 
-const hls=
-new Hls();
+const hls = new Hls({
+maxMaxBufferLength:100
+});
 
-hls.loadSource(
-url
+hls.loadSource(url);
+
+hls.attachMedia(video);
+
+hls.on(
+Hls.Events.MANIFEST_PARSED,
+()=>{
+
+const availableQualities=
+hls.levels.map(
+level=>level.height
 );
 
-hls.attachMedia(
-video
-);
+const defaultQuality=
+availableQualities[0];
+
+new Plyr(
+video,
+{
+controls:[
+'play-large',
+'play',
+'mute',
+'volume',
+'settings',
+'fullscreen'
+],
+
+quality:{
+default:defaultQuality,
+
+options:availableQualities,
+
+forced:true,
+
+onChange:(quality)=>{
+
+hls.levels.forEach(
+(level,levelIndex)=>{
+
+if(
+level.height===quality
+){
+
+hls.currentLevel=
+levelIndex;
 
 }
 
-else{
+});
+
+}
+
+}
+
+}
+);
+
+
+// IMPORTANT
+hls.attachMedia(video);
+hls.loadSource(url);
+
+document.addEventListener(
+'fullscreenchange',
+()=>{
+
+if(
+document.fullscreenElement
+){
+
+if(
+screen.orientation &&
+screen.orientation.lock
+){
+
+screen.orientation
+.lock('landscape')
+.catch(()=>{});
+
+}
+
+}else{
+
+if(
+screen.orientation &&
+screen.orientation.unlock
+){
+
+screen.orientation
+.unlock()
+.catch(()=>{});
+
+}
+
+}
+
+});
+
+});
+
+} else if (
+
+video.canPlayType(
+'application/vnd.apple.mpegurl'
+)
+
+){
 
 video.src=url;
+
+new Plyr(video);
+
+}else{
+
+document.body.innerHTML=
+'<p style="color:white;text-align:center">Browser does not support HLS playback.</p>';
 
 }
 
